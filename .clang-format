@@ -1,0 +1,10 @@
+---
+BasedOnStyle: Google
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+DerivePointerAlignment: false
+IndentPPDirectives: AfterHash
+MaxEmptyLinesToKeep: 2
+SpacesInContainerLiterals: false
+Standard: Cpp11
