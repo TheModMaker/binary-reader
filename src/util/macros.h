@@ -1,4 +1,4 @@
-// Copyright 2021 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -9,17 +9,17 @@
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
+// See the License for the specific language governing permissionsand
 // limitations under the License.
 
-//#include "parser/binary_parser.h"
+#define NON_COPYABLE_TYPE(type) \
+  type(const type&) = delete;   \
+  type& operator=(const type&) = delete
 
-#include <gtest/gtest.h>
+#define NON_MOVABLE_TYPE(type) \
+  type(type&&) = delete;       \
+  type& operator=(type&&) = delete
 
-namespace binary_reader {
-
-TEST(BinaryParserTest, ParseFile_EmptyFile) {
-  EXPECT_EQ(1, 1);
-}
-
-}  // namespace binary_reader
+#define NON_COPYABLE_OR_MOVABLE_TYPE(type) \
+  NON_COPYABLE_TYPE(type);                 \
+  NON_MOVABLE_TYPE(type)

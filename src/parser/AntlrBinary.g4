@@ -41,8 +41,7 @@ empty : ;
 
 //// Type definitions
 typeDefinition : TYPE IDENTIFIER '{' typeMember* '}' ;
-typeMember : globalDefinition
-           | dataField ;
+typeMember : dataField ;
 
 dataField : completeType IDENTIFIER ';' ;
 

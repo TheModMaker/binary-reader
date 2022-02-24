@@ -14,9 +14,9 @@
 
 # Generate lexer/parser
 antlr_target(antlr_parser AntlrBinary.g4 PACKAGE antlr4 VISITOR)
-include_directories(${ANTLR_antlr_parser_OUTPUT_DIR})
 
 add_library(parser STATIC
             ${ANTLR_antlr_parser_CXX_OUTPUTS}
 )
+target_include_directories(parser PUBLIC ${ANTLR_antlr_parser_OUTPUT_DIR})
 target_link_libraries(parser antlr4_static)

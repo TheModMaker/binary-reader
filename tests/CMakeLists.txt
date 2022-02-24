@@ -14,7 +14,7 @@
 
 add_executable(
     all_tests
-    "parser/binary_parser_unittest.cc"
+    "parser/definition_parser_unittest.cc"
 )
 target_link_libraries(all_tests gtest_main base_lib)
 

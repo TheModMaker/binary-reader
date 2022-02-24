@@ -60,12 +60,15 @@ add_subdirectory(third_party/antlr4/runtime/Cpp)
 find_package(ANTLR REQUIRED)
 include_directories(third_party/antlr4/runtime/Cpp/runtime/src)
 
+include_directories(include)
 include_directories(src)
 
 add_subdirectory(src/parser)
 
 add_library(base_lib STATIC
-            "src/util/empty_compile.cc"
+            "src/ast/type_def.cc"
+            "src/ast/type_info.cc"
+            "src/parser/definition_parser.cc"
 )
 target_link_libraries(base_lib parser)
 
