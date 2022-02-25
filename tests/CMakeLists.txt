@@ -15,7 +15,8 @@
 add_executable(
     all_tests
     "parser/definition_parser_unittest.cc"
+    "public/file_system_unittest.cc"
 )
-target_link_libraries(all_tests gtest_main base_lib)
+target_link_libraries(all_tests gtest_main gmock base_lib)
 
 gtest_discover_tests(all_tests)
