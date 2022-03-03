@@ -69,7 +69,9 @@ add_library(base_lib STATIC
             "src/ast/type_def.cc"
             "src/ast/type_info.cc"
             "src/parser/definition_parser.cc"
+            "src/public/file_object.cc"
             "src/public/file_system.cc"
+            "src/public/value.cc"
 )
 target_link_libraries(base_lib parser)
 
