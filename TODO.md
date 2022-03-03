@@ -1,6 +1,7 @@
 # Temporary TODO list
 
 - Add custom types
+- Add encoding support
 - Add custom integer sizes/flags
 - Add array types
 - Add if/while/etc
