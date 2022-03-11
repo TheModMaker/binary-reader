@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "binary_reader/error.h"
+
 namespace binary_reader {
 
 /// <summary>
@@ -59,8 +61,11 @@ class FileReader {
   /// On input, contains the number of bytes to read; on output, it should be
   /// updated to the number of bytes read.
   /// </param>
+  /// <param name="error">
+  /// On error, will be filled with the error description.
+  /// </param>
   /// <returns>True on success, false on error.</returns>
-  virtual bool Read(uint8_t* buffer, size_t* size) = 0;
+  virtual bool Read(uint8_t* buffer, size_t* size, ErrorInfo* error) = 0;
 
   /// <summary>
   /// Seeks to the given absolute byte position.  This should return false if
@@ -71,8 +76,11 @@ class FileReader {
   /// On input, the position to seek to; on output, should be updated to the
   /// position that was seeked to.
   /// </param>
+  /// <param name="error">
+  /// On error, will be filled with the error description.
+  /// </param>
   /// <returns>True on success, false on error.</returns>
-  virtual bool Seek(uint64_t* position) = 0;
+  virtual bool Seek(uint64_t* position, ErrorInfo* error) = 0;
 
   /// <summary>
   /// Reads the whole file into the given buffer.  The current file position is
@@ -80,8 +88,11 @@ class FileReader {
   /// the buffer will be erased.
   /// </summary>
   /// <param name="buffer">The buffer to fill.</param>
+  /// <param name="error">
+  /// On error, will be filled with the error description.
+  /// </param>
   /// <returns>True on success, false on error.</returns>
-  bool ReadFully(std::vector<uint8_t>* buffer);
+  bool ReadFully(std::vector<uint8_t>* buffer, ErrorInfo* error);
 };
 
 /// <summary>

@@ -82,9 +82,10 @@ std::shared_ptr<FileParser> FileParser::CreateFromFile(
       errors->push_back({path, "Error opening definition file"});
     return nullptr;
   }
-  if (!file->ReadFully(&buffer)) {
+  ErrorInfo error;
+  if (!file->ReadFully(&buffer, &error)) {
     if (errors)
-      errors->push_back({path, "Error reading definition file"});
+      errors->push_back(error);
     return nullptr;
   }
 

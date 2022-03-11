@@ -14,6 +14,8 @@
 
 #include "binary_reader/file_system.h"
 
+#include <errno.h>
+
 #include <cstdio>
 
 #ifdef WIN32
@@ -29,7 +31,8 @@ constexpr const size_t kReadSize = 16 * 1024 * 1024;
 
 class FileFileReader sealed : public FileReader {
  public:
-  FileFileReader(std::FILE* fs) : fs_(fs), size_(GetSize(fs)) {}
+  FileFileReader(const std::string& path, std::FILE* fs)
+      : path_(path), fs_(fs), size_(GetSize(fs)) {}
   ~FileFileReader() override {}
 
   bool can_seek() const override {
@@ -44,17 +47,29 @@ class FileFileReader sealed : public FileReader {
     return size_;
   }
 
-  bool Read(uint8_t* buffer, size_t* size) override {
+  bool Read(uint8_t* buffer, size_t* size, ErrorInfo* error) override {
     *size = std::fread(buffer, 1, *size, fs_);
-    return std::ferror(fs_) == 0;
+    if (std::ferror(fs_)) {
+      *error = ErrorInfo{
+          path_, "Error reading from file.  errno=" + std::to_string(errno),
+          ErrorLevel::Error};
+      return false;
+    }
+    return true;
   }
 
-  bool Seek(uint64_t* position) override {
+  bool Seek(uint64_t* position, ErrorInfo* error) override {
     // We can seek past the end of the file; since we want to only read to the
     // end of the file, clamp it to the size.
     if (*position > size_)
       *position = size_;
-    return fseeko(fs_, *position, SEEK_SET) == 0;
+    if (fseeko(fs_, *position, SEEK_SET)) {
+      *error = ErrorInfo{
+          path_, "Error seeking file.  errno=" + std::to_string(errno),
+          ErrorLevel::Error};
+      return false;
+    }
+    return true;
   }
 
  private:
@@ -65,6 +80,7 @@ class FileFileReader sealed : public FileReader {
     return ret;
   }
 
+  const std::string path_;
   FILE* const fs_;
   const uint64_t size_;
 };
@@ -77,16 +93,16 @@ class FStreamFileSystem sealed : public FileSystem {
     FILE* fs = fopen(path.c_str(), "r");
     if (!fs)
       return nullptr;
-    return std::make_shared<FileFileReader>(fs);
+    return std::make_shared<FileFileReader>(path, fs);
   }
 };
 
 }  // namespace
 
-bool FileReader::ReadFully(std::vector<uint8_t>* buffer) {
+bool FileReader::ReadFully(std::vector<uint8_t>* buffer, ErrorInfo* error) {
   std::vector<uint8_t> ret;
   uint64_t beginning = 0;
-  if (!Seek(&beginning))
+  if (!Seek(&beginning, error))
     return false;
 
   std::optional<uint64_t> size = this->size();
@@ -95,7 +111,7 @@ bool FileReader::ReadFully(std::vector<uint8_t>* buffer) {
     size_t read = size.value_or(kReadSize);
     size.reset();
     ret.resize(offset + read);
-    if (!Read(&ret[offset], &read))
+    if (!Read(&ret[offset], &read, error))
       return false;
     ret.resize(offset + read);
     if (read == 0) {

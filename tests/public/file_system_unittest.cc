@@ -29,8 +29,8 @@ class MockFileReader sealed : public FileReader {
   MOCK_METHOD(bool, can_seek, (), (const, override));
   MOCK_METHOD(uint64_t, position, (), (const, override));
   MOCK_METHOD(std::optional<uint64_t>, size, (), (const, override));
-  MOCK_METHOD(bool, Read, (uint8_t*, size_t*), (override));
-  MOCK_METHOD(bool, Seek, (uint64_t*), (override));
+  MOCK_METHOD(bool, Read, (uint8_t*, size_t*, ErrorInfo*), (override));
+  MOCK_METHOD(bool, Seek, (uint64_t*, ErrorInfo*), (override));
 };
 
 using testing::_;
@@ -72,18 +72,19 @@ TEST_F(FileSystemTest, ReadFully_Sized) {
   MockFileReader reader;
   {
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(true));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected))))
+    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
         .WillOnce(
             DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
                   Return(true)));
-    EXPECT_CALL(reader, Read(_, _))
+    EXPECT_CALL(reader, Read(_, _, _))
         .WillOnce(DoAll(SetArgPointee<1>(0), Return(true)));
   }
 
   std::vector<uint8_t> output;
-  ASSERT_TRUE(reader.ReadFully(&output));
+  ErrorInfo error;
+  ASSERT_TRUE(reader.ReadFully(&output, &error));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -93,9 +94,9 @@ TEST_F(FileSystemTest, ReadFully_IncrementalReads) {
   MockFileReader reader;
   {
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(true));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(std::nullopt));
-    EXPECT_CALL(reader, Read(_, Pointee(Gt(5))))
+    EXPECT_CALL(reader, Read(_, Pointee(Gt(5)), _))
         .WillOnce(DoAll(SetArrayArgument<0>(expected, expected + 5),
                         SetArgPointee<1>(5), Return(true)))
         .WillOnce(DoAll(SetArrayArgument<0>(expected + 5, expected + 9),
@@ -107,7 +108,8 @@ TEST_F(FileSystemTest, ReadFully_IncrementalReads) {
   }
 
   std::vector<uint8_t> output;
-  ASSERT_TRUE(reader.ReadFully(&output));
+  ErrorInfo error;
+  ASSERT_TRUE(reader.ReadFully(&output, &error));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -117,19 +119,20 @@ TEST_F(FileSystemTest, ReadFully_ClearsExisting) {
   MockFileReader reader;
   {
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(true));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected))))
+    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
         .WillOnce(
             DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
                   Return(true)));
-    EXPECT_CALL(reader, Read(_, _))
+    EXPECT_CALL(reader, Read(_, _, _))
         .WillOnce(DoAll(SetArgPointee<1>(0), Return(true)));
   }
 
   std::vector<uint8_t> output;
+  ErrorInfo error;
   output.assign(expected, expected + sizeof(expected));
-  ASSERT_TRUE(reader.ReadFully(&output));
+  ASSERT_TRUE(reader.ReadFully(&output, &error));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -138,37 +141,40 @@ TEST_F(FileSystemTest, ReadFully_PropagatesErrors) {
   {
     MockFileReader reader;
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(false));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ASSERT_FALSE(reader.ReadFully(&output));
+    ErrorInfo error;
+    ASSERT_FALSE(reader.ReadFully(&output, &error));
   }
 
   {
     MockFileReader reader;
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(true));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(10));
-    EXPECT_CALL(reader, Read(_, _)).WillOnce(Return(false));
+    EXPECT_CALL(reader, Read(_, _, _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ASSERT_FALSE(reader.ReadFully(&output));
+    ErrorInfo error;
+    ASSERT_FALSE(reader.ReadFully(&output, &error));
   }
 
   {
     const uint8_t expected[] = "data";
     MockFileReader reader;
     InSequence seq;
-    EXPECT_CALL(reader, Seek(Pointee(0))).WillOnce(Return(true));
+    EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected))))
+    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
         .WillOnce(
             DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
                   Return(true)));
-    EXPECT_CALL(reader, Read(_, _)).WillOnce(Return(false));
+    EXPECT_CALL(reader, Read(_, _, _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ASSERT_FALSE(reader.ReadFully(&output));
+    ErrorInfo error;
+    ASSERT_FALSE(reader.ReadFully(&output, &error));
   }
 }
 
@@ -186,7 +192,8 @@ TEST_F(FileSystemTest, Default_Read) {
 
   uint8_t buffer[sizeof(expected)];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ErrorInfo error;
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp(expected, buffer, sizeof(buffer)), 0);
 }
@@ -202,12 +209,13 @@ TEST_F(FileSystemTest, Default_ReadPartial) {
 
   uint8_t buffer[3];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ErrorInfo error;
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), 3u);
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp("con", buffer, sizeof(buffer)), 0);
 
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), 6u);
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp("ten", buffer, sizeof(buffer)), 0);
@@ -224,7 +232,8 @@ TEST_F(FileSystemTest, Default_ReadLess) {
 
   uint8_t buffer[50];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ErrorInfo error;
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), sizeof(expected));
   ASSERT_EQ(read, sizeof(expected));
   EXPECT_EQ(memcmp(expected, buffer, sizeof(expected)), 0);
@@ -239,15 +248,16 @@ TEST_F(FileSystemTest, Default_ReadEof) {
   auto reader = system->Open("file.def");
   ASSERT_TRUE(reader);
   size_t seek = 1;
-  ASSERT_TRUE(reader->Seek(&seek));
+  ErrorInfo error;
+  ASSERT_TRUE(reader->Seek(&seek, &error));
 
   uint8_t buffer[50];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), 1);
   ASSERT_EQ(read, 0);
 
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), 1);
   ASSERT_EQ(read, 0);
 }
@@ -263,23 +273,24 @@ TEST_F(FileSystemTest, Default_Seek) {
   ASSERT_EQ(reader->position(), 0u);
 
   size_t seek = 5;
-  ASSERT_TRUE(reader->Seek(&seek));
+  ErrorInfo error;
+  ASSERT_TRUE(reader->Seek(&seek, &error));
   ASSERT_EQ(seek, 5);
   ASSERT_EQ(reader->position(), 5u);
 
   seek = 200;
-  ASSERT_TRUE(reader->Seek(&seek));
+  ASSERT_TRUE(reader->Seek(&seek, &error));
   ASSERT_EQ(seek, sizeof(expected));
   ASSERT_EQ(reader->position(), sizeof(expected));
 
   seek = 3;
-  ASSERT_TRUE(reader->Seek(&seek));
+  ASSERT_TRUE(reader->Seek(&seek, &error));
   ASSERT_EQ(seek, 3);
   ASSERT_EQ(reader->position(), 3u);
 
   uint8_t buffer[3];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read));
+  ASSERT_TRUE(reader->Read(buffer, &read, &error));
   ASSERT_EQ(reader->position(), 6);
   ASSERT_EQ(read, 3);
   EXPECT_EQ(memcmp("ten", buffer, 3), 0);
