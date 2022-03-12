@@ -59,7 +59,9 @@ class Value sealed {
         value_ = static_cast<uint64_t>(value);
       }
     } else {
-      static_assert(false, "Unable to create Value from this type.");
+      // This condition is always false, but needs to depend on T.
+      static_assert(std::is_same<T, bool>::value,
+                    "Unable to create Value from this type.");
     }
   }
   Value(const Value&);

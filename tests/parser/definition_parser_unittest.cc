@@ -14,7 +14,7 @@
 
 #include "parser/definition_parser.h"
 
-#include <gtest/gtest.h>
+#include "gtest_wrapper.h"
 
 namespace binary_reader {
 

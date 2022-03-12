@@ -14,8 +14,7 @@
 
 #include "util/buffered_file_reader.h"
 
-#include <gtest/gtest.h>
-
+#include "gtest_wrapper.h"
 #include "mocks.h"
 
 namespace binary_reader {

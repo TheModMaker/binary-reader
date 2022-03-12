@@ -14,6 +14,8 @@
 
 #include "ast/type_info.h"
 
+#include <algorithm>
+
 namespace binary_reader {
 
 TypeInfoBase::TypeInfoBase(const std::string& alias_name,
@@ -45,7 +47,7 @@ bool TypeInfoBase::equals(const TypeInfoBase& other) const {
   return alias_name_ == other.alias_name_ && base_name_ == other.base_name_;
 }
 
-bool TypeInfoBase::ReadValue(BufferedFileReader* reader, Value* result,
+bool TypeInfoBase::ReadValue(BufferedFileReader*, Value*,
                              ErrorCollection* errors) const {
   errors->AddError("ReadValue not implemented for this type");
   return false;
@@ -95,8 +97,8 @@ bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
   size_t index = 0;
   if (bit_offset != 0) {
     // Read most significant bits to least.
-    const uint8_t mask = (1u << (8 - bit_offset)) - 1;
-    const uint8_t shift = size_ + bit_offset < 8 ? 8 - size_ - bit_offset : 0;
+    const size_t mask = (1ull << (8 - bit_offset)) - 1;
+    const size_t shift = 8 - std::min<size_t>(size_ + bit_offset, 8);
     value = (buffer[0] & mask) >> shift;
     index++;
   }

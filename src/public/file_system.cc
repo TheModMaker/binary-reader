@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
+// TODO: Remove this and use fopen_s.  We can't for now since it gives
+// permission errors in the tests.
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "binary_reader/file_system.h"
 
 #include <errno.h>
@@ -64,9 +68,9 @@ class FileFileReader sealed : public FileReader {
     if (*position > size_)
       *position = size_;
     if (fseeko(fs_, *position, SEEK_SET)) {
-      *error = ErrorInfo{
-          path_, "Error seeking file.  errno=" + std::to_string(errno),
-          ErrorLevel::Error};
+      *error = ErrorInfo{path_,
+                         "Error seeking file.  errno=" + std::to_string(errno),
+                         ErrorLevel::Error};
       return false;
     }
     return true;
@@ -90,7 +94,7 @@ class FStreamFileSystem sealed : public FileSystem {
   FStreamFileSystem() {}
 
   std::shared_ptr<FileReader> Open(const std::string& path) {
-    FILE* fs = fopen(path.c_str(), "r");
+    FILE* fs = fopen(path.c_str(), "rb");
     if (!fs)
       return nullptr;
     return std::make_shared<FileFileReader>(path, fs);

@@ -60,6 +60,15 @@ add_subdirectory(third_party/antlr4/runtime/Cpp)
 find_package(ANTLR REQUIRED)
 include_directories(third_party/antlr4/runtime/Cpp/runtime/src)
 
+# Main library
+if(MSVC)
+  # Remove the default warning flag to avoid warnings about duplicate values.
+  string(REGEX REPLACE "/W[0-4]" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  add_compile_options(/W4 /WX /permissive-)
+else()
+  add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
 include_directories(include)
 include_directories(src)
 
@@ -78,10 +87,12 @@ add_library(base_lib STATIC
 )
 target_link_libraries(base_lib parser)
 
+# Main executable
 add_executable(binary_reader
                "src/app/main.cc"
 )
 target_link_libraries(binary_reader base_lib)
 
+# Tests
 add_subdirectory(third_party/googletest)
 add_subdirectory(tests)

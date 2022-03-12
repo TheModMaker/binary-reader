@@ -14,10 +14,9 @@
 
 #include "ast/type_info.h"
 
-#include <gtest/gtest.h>
-
 #include <memory>
 
+#include "gtest_wrapper.h"
 #include "mocks.h"
 
 namespace binary_reader {

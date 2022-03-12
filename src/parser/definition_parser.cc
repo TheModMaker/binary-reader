@@ -157,7 +157,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   // Forwards/misc
 
   antlrcpp::Any visitEmpty(
-      antlr4::AntlrBinaryParser::EmptyContext* ctx) override {
+      antlr4::AntlrBinaryParser::EmptyContext*) override {
     return antlrcpp::Any();
   }
 

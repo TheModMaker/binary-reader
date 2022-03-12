@@ -15,11 +15,10 @@
 #ifndef BINARY_READER_TESTS_MOCKS_H_
 #define BINARY_READER_TESTS_MOCKS_H_
 
-#include <gmock/gmock.h>
-
 #include <vector>
 
 #include "binary_reader/file_system.h"
+#include "gtest_wrapper.h"
 
 namespace binary_reader {
 

@@ -14,8 +14,7 @@
 
 #include "binary_reader/file_object.h"
 
-#include <gtest/gtest.h>
-
+#include "gtest_wrapper.h"
 #include "public/file_object_init.h"
 
 namespace binary_reader {

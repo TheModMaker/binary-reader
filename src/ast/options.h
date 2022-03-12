@@ -51,7 +51,9 @@ bool ParseOption(const std::string& value, T* result) {
       return true;
     }
   } else {
-    static_assert(false, "Unknown option type specified");
+    // This condition is always false, but needs to depend on T.
+    static_assert(std::is_same<T, Signedness>::value,
+                  "Unknown option type specified");
   }
   return false;
 }

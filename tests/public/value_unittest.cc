@@ -14,9 +14,9 @@
 
 #include "binary_reader/value.h"
 
-#include <gtest/gtest.h>
-
 #include <limits>
+
+#include "gtest_wrapper.h"
 
 namespace binary_reader {
 

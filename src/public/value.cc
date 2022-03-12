@@ -85,14 +85,16 @@ bool Value::operator==(const Value& other) const {
       return std::get<uint64_t>(value_) == std::get<uint64_t>(other.value_);
     } else if (other_type == ValueType::SignedInt) {
       return std::get<int64_t>(other.value_) >= 0 &&
-             std::get<uint64_t>(value_) == std::get<int64_t>(other.value_);
+             std::get<uint64_t>(value_) ==
+                 static_cast<uint64_t>(std::get<int64_t>(other.value_));
     } else if (other_type == ValueType::Double) {
       return std::get<uint64_t>(value_) == std::get<double>(other.value_);
     }
   } else if (this_type == ValueType::SignedInt) {
     if (other_type == ValueType::UnsignedInt) {
       return std::get<int64_t>(value_) >= 0 &&
-             std::get<int64_t>(value_) == std::get<uint64_t>(other.value_);
+             static_cast<uint64_t>(std::get<int64_t>(value_)) ==
+                 std::get<uint64_t>(other.value_);
     } else if (other_type == ValueType::SignedInt) {
       return std::get<int64_t>(value_) == std::get<int64_t>(other.value_);
     } else if (other_type == ValueType::Double) {

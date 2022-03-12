@@ -208,8 +208,8 @@ std::shared_ptr<FileObject> FileParser::ParseFile(
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(
-    std::shared_ptr<FileReader> reader, const std::string& type,
-    std::vector<ErrorInfo>* errors) {
+    std::shared_ptr<FileReader>, const std::string&,
+    std::vector<ErrorInfo>*) {
   // TODO: Handle reading binary files.
   return nullptr;
 }

@@ -14,11 +14,10 @@
 
 #include "binary_reader/file_system.h"
 
-#include <gtest/gtest.h>
-
 #include <filesystem>
 #include <fstream>
 
+#include "gtest_wrapper.h"
 #include "mocks.h"
 
 namespace binary_reader {

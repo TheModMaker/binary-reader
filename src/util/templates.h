@@ -15,6 +15,7 @@
 #ifndef BINARY_READER_UTIL_TEMPLATES_H_
 #define BINARY_READER_UTIL_TEMPLATES_H_
 
+#include <cstdint>
 #include <limits>
 
 namespace binary_reader {
