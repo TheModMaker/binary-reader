@@ -20,6 +20,9 @@
 #include <vector>
 
 #include "ast/options.h"
+#include "binary_reader/value.h"
+#include "util/buffered_file_reader.h"
+#include "util/error_collection.h"
 #include "util/macros.h"
 
 namespace binary_reader {
@@ -52,6 +55,19 @@ class TypeInfoBase {
     return !equals(other);
   }
 
+  /// <summary>
+  /// Reads a value from the given reader.  This moves the reader forward based
+  /// on how large this type is.  The base implementation only returns an
+  /// error.
+  /// </summary>
+  /// <param name="reader">The object to read from</param>
+  /// <param name="bit_offset">The offset within the byte to start at.</param>
+  /// <param name="result">Will be filled in with the result.</param>
+  /// <param name="errors">Will be filled in with any errors.</param>
+  /// <returns>True on success, false on error.</returns>
+  virtual bool ReadValue(BufferedFileReader* reader, Value* result,
+                         ErrorCollection* errors) const;
+
  private:
   const std::string alias_name_;
   const std::string base_name_;
@@ -78,6 +94,9 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
   }
 
   bool equals(const TypeInfoBase& other) const override;
+
+  bool ReadValue(BufferedFileReader* reader, Value* result,
+                 ErrorCollection* errors) const override;
 
  private:
   const size_t size_;

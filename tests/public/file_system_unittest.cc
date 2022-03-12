@@ -14,24 +14,16 @@
 
 #include "binary_reader/file_system.h"
 
-#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
 
+#include "mocks.h"
+
 namespace binary_reader {
 
 namespace {
-
-class MockFileReader sealed : public FileReader {
- public:
-  MOCK_METHOD(bool, can_seek, (), (const, override));
-  MOCK_METHOD(uint64_t, position, (), (const, override));
-  MOCK_METHOD(std::optional<uint64_t>, size, (), (const, override));
-  MOCK_METHOD(bool, Read, (uint8_t*, size_t*, ErrorInfo*), (override));
-  MOCK_METHOD(bool, Seek, (uint64_t*, ErrorInfo*), (override));
-};
 
 using testing::_;
 using testing::DoAll;
@@ -74,12 +66,8 @@ TEST_F(FileSystemTest, ReadFully_Sized) {
     InSequence seq;
     EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
-        .WillOnce(
-            DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
-                  Return(true)));
-    EXPECT_CALL(reader, Read(_, _, _))
-        .WillOnce(DoAll(SetArgPointee<1>(0), Return(true)));
+    reader.ExpectRead(expected, kExpectExactRead);
+    reader.ExpectReadEof();
   }
 
   std::vector<uint8_t> output;
@@ -96,15 +84,10 @@ TEST_F(FileSystemTest, ReadFully_IncrementalReads) {
     InSequence seq;
     EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(std::nullopt));
-    EXPECT_CALL(reader, Read(_, Pointee(Gt(5)), _))
-        .WillOnce(DoAll(SetArrayArgument<0>(expected, expected + 5),
-                        SetArgPointee<1>(5), Return(true)))
-        .WillOnce(DoAll(SetArrayArgument<0>(expected + 5, expected + 9),
-                        SetArgPointee<1>(4), Return(true)))
-        .WillOnce(DoAll(
-            SetArrayArgument<0>(expected + 9, expected + sizeof(expected)),
-            SetArgPointee<1>(sizeof(expected) - 9), Return(true)))
-        .WillOnce(DoAll(SetArgPointee<1>(0), Return(true)));
+    reader.ExpectReadSize(expected, 5);
+    reader.ExpectReadSize(expected + 5, 4);
+    reader.ExpectReadSize(expected + 9, sizeof(expected) - 9);
+    reader.ExpectReadEof();
   }
 
   std::vector<uint8_t> output;
@@ -121,12 +104,8 @@ TEST_F(FileSystemTest, ReadFully_ClearsExisting) {
     InSequence seq;
     EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
-        .WillOnce(
-            DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
-                  Return(true)));
-    EXPECT_CALL(reader, Read(_, _, _))
-        .WillOnce(DoAll(SetArgPointee<1>(0), Return(true)));
+    reader.ExpectRead(expected, kExpectExactRead);
+    reader.ExpectReadEof();
   }
 
   std::vector<uint8_t> output;
@@ -166,10 +145,7 @@ TEST_F(FileSystemTest, ReadFully_PropagatesErrors) {
     InSequence seq;
     EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(true));
     EXPECT_CALL(reader, size()).WillOnce(Return(sizeof(expected)));
-    EXPECT_CALL(reader, Read(_, Pointee(sizeof(expected)), _))
-        .WillOnce(
-            DoAll(SetArrayArgument<0>(expected, expected + sizeof(expected)),
-                  Return(true)));
+    reader.ExpectRead(expected, kExpectExactRead);
     EXPECT_CALL(reader, Read(_, _, _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;

@@ -73,6 +73,8 @@ add_library(base_lib STATIC
             "src/public/file_parser.cc"
             "src/public/file_system.cc"
             "src/public/value.cc"
+            "src/util/buffered_file_reader.cc"
+            "src/util/error_collection.cc"
 )
 target_link_libraries(base_lib parser)
 
