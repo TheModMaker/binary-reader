@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "binary_reader/error.h"
+#include "binary_reader/error_collection.h"
 #include "binary_reader/file_object.h"
 #include "binary_reader/file_system.h"
 
@@ -74,10 +74,10 @@ class FileParser sealed {
   static std::shared_ptr<FileParser> CreateFromFile(
       const std::string& path, const FileParserOptions& options);
   static std::shared_ptr<FileParser> CreateFromFile(
-      const std::string& path, std::vector<ErrorInfo>* errors);
+      const std::string& path, ErrorCollection* errors);
   static std::shared_ptr<FileParser> CreateFromFile(
       const std::string& path, const FileParserOptions& options,
-      std::vector<ErrorInfo>* errors);
+      ErrorCollection* errors);
 
   /// <summary>
   /// Reads the given string as a definition file.
@@ -92,10 +92,10 @@ class FileParser sealed {
   static std::shared_ptr<FileParser> CreateFromDefinition(
       const std::string& def, const FileParserOptions& options);
   static std::shared_ptr<FileParser> CreateFromDefinition(
-      const std::string& def, std::vector<ErrorInfo>* errors);
+      const std::string& def, ErrorCollection* errors);
   static std::shared_ptr<FileParser> CreateFromDefinition(
       const std::string& def, const FileParserOptions& options,
-      std::vector<ErrorInfo>* errors);
+      ErrorCollection* errors);
   static std::shared_ptr<FileParser> CreateFromDefinition(
       const std::string& def, const std::string& path);
   static std::shared_ptr<FileParser> CreateFromDefinition(
@@ -103,10 +103,10 @@ class FileParser sealed {
       const FileParserOptions& options);
   static std::shared_ptr<FileParser> CreateFromDefinition(
       const std::string& def, const std::string& path,
-      std::vector<ErrorInfo>* errors);
+      ErrorCollection* errors);
   static std::shared_ptr<FileParser> CreateFromDefinition(
       const std::string& def, const std::string& path,
-      const FileParserOptions& options, std::vector<ErrorInfo>* errors);
+      const FileParserOptions& options, ErrorCollection* errors);
 
   /// <summary>
   /// Returns the current options used to parse files.
@@ -128,20 +128,20 @@ class FileParser sealed {
   /// <returns>The parsed FileObject, or nullptr on error.</returns>
   std::shared_ptr<FileObject> ParseFile(const std::string& path);
   std::shared_ptr<FileObject> ParseFile(const std::string& path,
-                                        std::vector<ErrorInfo>* errors);
+                                        ErrorCollection* errors);
   std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader);
   std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
-                                        std::vector<ErrorInfo>* errors);
+                                        ErrorCollection* errors);
   std::shared_ptr<FileObject> ParseFile(const std::string& path,
                                         const std::string& type);
   std::shared_ptr<FileObject> ParseFile(const std::string& path,
                                         const std::string& type,
-                                        std::vector<ErrorInfo>* errors);
+                                        ErrorCollection* errors);
   std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
                                         const std::string& type);
   std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
                                         const std::string& type,
-                                        std::vector<ErrorInfo>* errors);
+                                        ErrorCollection* errors);
 
  private:
   struct Impl;

@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "ast/options.h"
+#include "binary_reader/error_collection.h"
 #include "binary_reader/value.h"
 #include "util/buffered_file_reader.h"
-#include "util/error_collection.h"
 #include "util/macros.h"
 
 namespace binary_reader {

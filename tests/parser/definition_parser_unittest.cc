@@ -22,7 +22,7 @@ namespace {
 
 bool ParseSuccess(const char* val,
                   std::vector<std::shared_ptr<TypeDefinition>>* defs) {
-  std::vector<ErrorInfo> errors;
+  ErrorCollection errors;
   ParseDefinitionFile("", val, defs, &errors);
   for (const auto& error : errors) {
     const char* levels[] = {"Error", "Warning", "Info"};
@@ -109,7 +109,7 @@ TEST(DefinitionParserTest, ParseFile_CanUseRecursiveTypes) {
 
 TEST(DefinitionParserTest, ParseFile_Errors) {
   std::vector<std::shared_ptr<TypeDefinition>> defs;
-  std::vector<ErrorInfo> errors;
+  ErrorCollection errors;
 
   // Unknown type
   ASSERT_FALSE(ParseDefinitionFile("", "type foo { abc x; }", &defs, &errors));

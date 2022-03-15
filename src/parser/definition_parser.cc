@@ -102,7 +102,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
  public:
   Visitor(const std::string& path,
           std::vector<std::shared_ptr<TypeDefinition>>* defs,
-          std::vector<ErrorInfo>* errors)
+          ErrorCollection* errors)
       : path_(path), defs_(defs), errors_(errors) {}
 
   antlrcpp::Any visitMain(
@@ -156,8 +156,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   /////////////////////////////////////////////////////////////////////////////
   // Forwards/misc
 
-  antlrcpp::Any visitEmpty(
-      antlr4::AntlrBinaryParser::EmptyContext*) override {
+  antlrcpp::Any visitEmpty(antlr4::AntlrBinaryParser::EmptyContext*) override {
     return antlrcpp::Any();
   }
 
@@ -209,21 +208,21 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
 
   void AddError(const std::string& message, antlr4::Token* token,
                 ErrorLevel level = ErrorLevel::Error) {
-    errors_->push_back({path_, message, level, token->getStartIndex(),
-                        token->getLine(), token->getCharPositionInLine()});
+    errors_->Add({path_, message, level, token->getStartIndex(),
+                  token->getLine(), token->getCharPositionInLine()});
   }
 
   Stack stack_;
   const std::string path_;
   std::vector<std::shared_ptr<TypeDefinition>>* const defs_;
-  std::vector<ErrorInfo>* const errors_;
+  ErrorCollection* const errors_;
 };
 
 }  // namespace
 
 bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
                          std::vector<std::shared_ptr<TypeDefinition>>* defs,
-                         std::vector<ErrorInfo>* errors) {
+                         ErrorCollection* errors) {
   try {
     antlr4::ANTLRInputStream input(buffer);
     antlr4::AntlrBinaryLexer lexer(&input);
@@ -232,11 +231,7 @@ bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
 
     Visitor visitor{path, defs, errors};
     visitor.visit(parser.main());
-    for (const auto& err : *errors) {
-      if (err.level == ErrorLevel::Error)
-        return false;
-    }
-    return true;
+    return !errors->has_errors();
   } catch (antlr4::RuntimeException&) {
     // TODO: Report parser errors.
     return false;

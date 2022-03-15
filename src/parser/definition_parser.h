@@ -20,13 +20,13 @@
 #include <vector>
 
 #include "ast/type_def.h"
-#include "binary_reader/error.h"
+#include "binary_reader/error_collection.h"
 
 namespace binary_reader {
 
 bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
                          std::vector<std::shared_ptr<TypeDefinition>>* defs,
-                         std::vector<ErrorInfo>* errors);
+                         ErrorCollection* errors);
 
 }  // namespace binary_reader
 

@@ -17,8 +17,8 @@
 
 #include <memory>
 
+#include "binary_reader/error_collection.h"
 #include "binary_reader/file_system.h"
-#include "util/error_collection.h"
 #include "util/macros.h"
 #include "util/size.h"
 

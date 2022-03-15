@@ -89,7 +89,7 @@ bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
   if (!reader->GetBuffer(&buffer, &buffer_size, errors))
     return false;
   if (buffer_size < byte_count) {
-    errors->AddEof();
+    errors->AddError("Unexpected end of file");
     return false;
   }
 

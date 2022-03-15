@@ -42,12 +42,9 @@ bool BufferedFileReader::Seek(Size position, ErrorCollection* errors) {
   start_position_ = position.ClipToByte();
   buffer_offset_ = Size::FromBits(position.bit_offset());
   used_ = 0;
-  ErrorInfo error;
   size_t byte_pos = position.byte_count();
-  if (!reader_->Seek(&byte_pos, &error)) {
-    errors->Add(error);
+  if (!reader_->Seek(&byte_pos, errors))
     return false;
-  }
   return true;
 }
 
@@ -83,11 +80,8 @@ bool BufferedFileReader::EnsureBuffer(Size size, ErrorCollection* errors) {
   while (buffer_offset_ + size > Size::FromBytes(used_)) {
     uint8_t* output = buffer_.get() + used_;
     size_t to_read = kBufferSize - used_;
-    ErrorInfo error;
-    if (!reader_->Read(output, &to_read, &error)) {
-      errors->Add(error);
+    if (!reader_->Read(output, &to_read, errors))
       return false;
-    }
     if (!to_read)  // EOF
       break;
     used_ += to_read;

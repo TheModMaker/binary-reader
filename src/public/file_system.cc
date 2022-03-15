@@ -51,26 +51,24 @@ class FileFileReader sealed : public FileReader {
     return size_;
   }
 
-  bool Read(uint8_t* buffer, size_t* size, ErrorInfo* error) override {
+  bool Read(uint8_t* buffer, size_t* size, ErrorCollection* errors) override {
     *size = std::fread(buffer, 1, *size, fs_);
     if (std::ferror(fs_)) {
-      *error = ErrorInfo{
-          path_, "Error reading from file.  errno=" + std::to_string(errno),
-          ErrorLevel::Error};
+      errors->Add(
+          {path_, "Error reading from file.  errno=" + std::to_string(errno)});
       return false;
     }
     return true;
   }
 
-  bool Seek(uint64_t* position, ErrorInfo* error) override {
+  bool Seek(uint64_t* position, ErrorCollection* errors) override {
     // We can seek past the end of the file; since we want to only read to the
     // end of the file, clamp it to the size.
     if (*position > size_)
       *position = size_;
     if (fseeko(fs_, *position, SEEK_SET)) {
-      *error = ErrorInfo{path_,
-                         "Error seeking file.  errno=" + std::to_string(errno),
-                         ErrorLevel::Error};
+      errors->Add(
+          {path_, "Error seeking file.  errno=" + std::to_string(errno)});
       return false;
     }
     return true;
@@ -103,10 +101,11 @@ class FStreamFileSystem sealed : public FileSystem {
 
 }  // namespace
 
-bool FileReader::ReadFully(std::vector<uint8_t>* buffer, ErrorInfo* error) {
+bool FileReader::ReadFully(std::vector<uint8_t>* buffer,
+                           ErrorCollection* errors) {
   std::vector<uint8_t> ret;
   uint64_t beginning = 0;
-  if (!Seek(&beginning, error))
+  if (!Seek(&beginning, errors))
     return false;
 
   std::optional<uint64_t> size = this->size();
@@ -115,7 +114,7 @@ bool FileReader::ReadFully(std::vector<uint8_t>* buffer, ErrorInfo* error) {
     size_t read = size.value_or(kReadSize);
     size.reset();
     ret.resize(offset + read);
-    if (!Read(&ret[offset], &read, error))
+    if (!Read(&ret[offset], &read, errors))
       return false;
     ret.resize(offset + read);
     if (read == 0) {

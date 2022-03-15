@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#ifndef BINARY_READER_UTIL_ERROR_COLLECTION_H_
-#define BINARY_READER_UTIL_ERROR_COLLECTION_H_
+#ifndef BINARY_READER_INCLUDE_ERROR_COLLECTION_H_
+#define BINARY_READER_INCLUDE_ERROR_COLLECTION_H_
 
 #include <string>
 #include <vector>
 
 #include "binary_reader/error.h"
-#include "util/macros.h"
 
 namespace binary_reader {
 
@@ -29,18 +28,54 @@ namespace binary_reader {
 /// path is copied to each error.
 /// </summary>
 class ErrorCollection sealed {
-  NON_COPYABLE_OR_MOVABLE_TYPE(ErrorCollection);
-
  public:
+  ErrorCollection();
   ErrorCollection(const std::string& file_path);
+  ErrorCollection(const ErrorCollection&) = delete;
+  ErrorCollection(ErrorCollection&&) = delete;
   ~ErrorCollection();
+
+  ErrorCollection& operator=(const ErrorCollection&) = delete;
+  ErrorCollection& operator=(ErrorCollection&&) = delete;
+
+  auto begin() const {
+    return errors_.begin();
+  }
+  auto end() const {
+    return errors_.end();
+  }
+
+  ErrorInfo& front() {
+    return errors_.front();
+  }
+  const ErrorInfo& front() const {
+    return errors_.front();
+  }
+  ErrorInfo& back() {
+    return errors_.back();
+  }
+  const ErrorInfo& back() const {
+    return errors_.back();
+  }
+
+  void clear() {
+    errors_.clear();
+    has_error_ = false;
+  }
+  size_t size() {
+    return errors_.size();
+  }
 
   const std::vector<ErrorInfo>& errors() const {
     return errors_;
   }
 
-  bool has_any() const;
-  bool has_errors() const;
+  bool empty() const {
+    return errors_.empty();
+  }
+  bool has_errors() const {
+    return has_error_;
+  }
 
   void Add(const ErrorInfo& info);
   void AddError(const std::string& message, uint64_t offset = 0,
@@ -50,8 +85,6 @@ class ErrorCollection sealed {
   void AddInfo(const std::string& message, uint64_t offset = 0, size_t line = 0,
                size_t column = 0);
 
-  void AddEof();
-
  private:
   const std::string file_path_;
   std::vector<ErrorInfo> errors_;
@@ -60,4 +93,4 @@ class ErrorCollection sealed {
 
 }  // namespace binary_reader
 
-#endif  // BINARY_READER_UTIL_ERROR_COLLECTION_H_
+#endif  // BINARY_READER_INCLUDE_ERROR_COLLECTION_H_

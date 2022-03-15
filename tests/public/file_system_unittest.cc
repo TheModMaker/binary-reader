@@ -70,8 +70,8 @@ TEST_F(FileSystemTest, ReadFully_Sized) {
   }
 
   std::vector<uint8_t> output;
-  ErrorInfo error;
-  ASSERT_TRUE(reader.ReadFully(&output, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader.ReadFully(&output, &errors));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -90,8 +90,8 @@ TEST_F(FileSystemTest, ReadFully_IncrementalReads) {
   }
 
   std::vector<uint8_t> output;
-  ErrorInfo error;
-  ASSERT_TRUE(reader.ReadFully(&output, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader.ReadFully(&output, &errors));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -108,9 +108,9 @@ TEST_F(FileSystemTest, ReadFully_ClearsExisting) {
   }
 
   std::vector<uint8_t> output;
-  ErrorInfo error;
+  ErrorCollection errors;
   output.assign(expected, expected + sizeof(expected));
-  ASSERT_TRUE(reader.ReadFully(&output, &error));
+  ASSERT_TRUE(reader.ReadFully(&output, &errors));
   ASSERT_EQ(output.size(), sizeof(expected));
   ASSERT_EQ(memcmp(output.data(), expected, sizeof(expected)), 0);
 }
@@ -122,8 +122,8 @@ TEST_F(FileSystemTest, ReadFully_PropagatesErrors) {
     EXPECT_CALL(reader, Seek(Pointee(0), _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ErrorInfo error;
-    ASSERT_FALSE(reader.ReadFully(&output, &error));
+    ErrorCollection errors;
+    ASSERT_FALSE(reader.ReadFully(&output, &errors));
   }
 
   {
@@ -134,8 +134,8 @@ TEST_F(FileSystemTest, ReadFully_PropagatesErrors) {
     EXPECT_CALL(reader, Read(_, _, _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ErrorInfo error;
-    ASSERT_FALSE(reader.ReadFully(&output, &error));
+    ErrorCollection errors;
+    ASSERT_FALSE(reader.ReadFully(&output, &errors));
   }
 
   {
@@ -148,8 +148,8 @@ TEST_F(FileSystemTest, ReadFully_PropagatesErrors) {
     EXPECT_CALL(reader, Read(_, _, _)).WillOnce(Return(false));
 
     std::vector<uint8_t> output;
-    ErrorInfo error;
-    ASSERT_FALSE(reader.ReadFully(&output, &error));
+    ErrorCollection errors;
+    ASSERT_FALSE(reader.ReadFully(&output, &errors));
   }
 }
 
@@ -167,8 +167,8 @@ TEST_F(FileSystemTest, Default_Read) {
 
   uint8_t buffer[sizeof(expected)];
   size_t read = sizeof(buffer);
-  ErrorInfo error;
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp(expected, buffer, sizeof(buffer)), 0);
 }
@@ -184,13 +184,13 @@ TEST_F(FileSystemTest, Default_ReadPartial) {
 
   uint8_t buffer[3];
   size_t read = sizeof(buffer);
-  ErrorInfo error;
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), 3u);
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp("con", buffer, sizeof(buffer)), 0);
 
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), 6u);
   ASSERT_EQ(read, sizeof(buffer));
   EXPECT_EQ(memcmp("ten", buffer, sizeof(buffer)), 0);
@@ -207,8 +207,8 @@ TEST_F(FileSystemTest, Default_ReadLess) {
 
   uint8_t buffer[50];
   size_t read = sizeof(buffer);
-  ErrorInfo error;
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), sizeof(expected));
   ASSERT_EQ(read, sizeof(expected));
   EXPECT_EQ(memcmp(expected, buffer, sizeof(expected)), 0);
@@ -223,16 +223,16 @@ TEST_F(FileSystemTest, Default_ReadEof) {
   auto reader = system->Open("file.def");
   ASSERT_TRUE(reader);
   size_t seek = 1;
-  ErrorInfo error;
-  ASSERT_TRUE(reader->Seek(&seek, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader->Seek(&seek, &errors));
 
   uint8_t buffer[50];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), 1);
   ASSERT_EQ(read, 0);
 
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), 1);
   ASSERT_EQ(read, 0);
 }
@@ -248,24 +248,24 @@ TEST_F(FileSystemTest, Default_Seek) {
   ASSERT_EQ(reader->position(), 0u);
 
   size_t seek = 5;
-  ErrorInfo error;
-  ASSERT_TRUE(reader->Seek(&seek, &error));
+  ErrorCollection errors;
+  ASSERT_TRUE(reader->Seek(&seek, &errors));
   ASSERT_EQ(seek, 5);
   ASSERT_EQ(reader->position(), 5u);
 
   seek = 200;
-  ASSERT_TRUE(reader->Seek(&seek, &error));
+  ASSERT_TRUE(reader->Seek(&seek, &errors));
   ASSERT_EQ(seek, sizeof(expected));
   ASSERT_EQ(reader->position(), sizeof(expected));
 
   seek = 3;
-  ASSERT_TRUE(reader->Seek(&seek, &error));
+  ASSERT_TRUE(reader->Seek(&seek, &errors));
   ASSERT_EQ(seek, 3);
   ASSERT_EQ(reader->position(), 3u);
 
   uint8_t buffer[3];
   size_t read = sizeof(buffer);
-  ASSERT_TRUE(reader->Read(buffer, &read, &error));
+  ASSERT_TRUE(reader->Read(buffer, &read, &errors));
   ASSERT_EQ(reader->position(), 6);
   ASSERT_EQ(read, 3);
   EXPECT_EQ(memcmp("ten", buffer, 3), 0);

@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "binary_reader/error.h"
+#include "binary_reader/error_collection.h"
 
 namespace binary_reader {
 
@@ -65,7 +65,7 @@ class FileReader {
   /// On error, will be filled with the error description.
   /// </param>
   /// <returns>True on success, false on error.</returns>
-  virtual bool Read(uint8_t* buffer, size_t* size, ErrorInfo* error) = 0;
+  virtual bool Read(uint8_t* buffer, size_t* size, ErrorCollection* errors) = 0;
 
   /// <summary>
   /// Seeks to the given absolute byte position.  This should return false if
@@ -80,7 +80,7 @@ class FileReader {
   /// On error, will be filled with the error description.
   /// </param>
   /// <returns>True on success, false on error.</returns>
-  virtual bool Seek(uint64_t* position, ErrorInfo* error) = 0;
+  virtual bool Seek(uint64_t* position, ErrorCollection* errors) = 0;
 
   /// <summary>
   /// Reads the whole file into the given buffer.  The current file position is
@@ -92,7 +92,7 @@ class FileReader {
   /// On error, will be filled with the error description.
   /// </param>
   /// <returns>True on success, false on error.</returns>
-  bool ReadFully(std::vector<uint8_t>* buffer, ErrorInfo* error);
+  bool ReadFully(std::vector<uint8_t>* buffer, ErrorCollection* errors);
 };
 
 /// <summary>

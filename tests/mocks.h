@@ -36,8 +36,8 @@ class MockFileReader : public FileReader {
   MOCK_METHOD(bool, can_seek, (), (const, override));
   MOCK_METHOD(uint64_t, position, (), (const, override));
   MOCK_METHOD(std::optional<uint64_t>, size, (), (const, override));
-  MOCK_METHOD(bool, Read, (uint8_t*, size_t*, ErrorInfo*), (override));
-  MOCK_METHOD(bool, Seek, (uint64_t*, ErrorInfo*), (override));
+  MOCK_METHOD(bool, Read, (uint8_t*, size_t*, ErrorCollection*), (override));
+  MOCK_METHOD(bool, Seek, (uint64_t*, ErrorCollection*), (override));
 
   template <size_t N>
   void ExpectRead(const uint8_t (&buffer)[N], bool exact_size = false) {
