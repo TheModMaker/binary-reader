@@ -39,7 +39,7 @@ void CheckInteger(std::shared_ptr<TypeInfoBase> info, const std::string& alias,
   ASSERT_TRUE(integer);
   EXPECT_EQ(integer->alias_name(), alias);
   EXPECT_EQ(integer->base_name(), "integer");
-  EXPECT_EQ(integer->size(), size);
+  EXPECT_EQ(*integer->static_size(), Size::FromBits(size));
   EXPECT_EQ(integer->signedness(), sign);
   EXPECT_EQ(integer->byte_order(), order);
 }

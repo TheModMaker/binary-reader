@@ -15,11 +15,11 @@
 #ifndef BINARY_READER_INCLUDE_FILE_OBJECT_H_
 #define BINARY_READER_INCLUDE_FILE_OBJECT_H_
 
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "binary_reader/error_collection.h"
 #include "binary_reader/value.h"
 
 namespace binary_reader {
@@ -38,6 +38,10 @@ struct FileObjectInit;
 /// This type is iterable, and iterates over the fields in the object.
 /// The order of elements is the order that they appear in the file definition.
 /// The iterator's value is a pair of string field name and the Value.
+///
+/// This lazy-loads the fields in the object.  The field is only parsed when
+/// requesting the field's value.  The cached values can be cleared to reduce
+/// memory usage.
 /// </summary>
 class FileObject sealed {
  public:
@@ -68,8 +72,11 @@ class FileObject sealed {
     friend FileObject;
     explicit const_iterator(std::unique_ptr<IteratorState> state);
 
+    void FillValue();
+
     std::unique_ptr<IteratorState> impl_;
   };
+  using iterator = const_iterator;
 
   FileObject(const FileObject&) = delete;
   FileObject(FileObject&&) = delete;
@@ -92,17 +99,54 @@ class FileObject sealed {
   /// </summary>
   /// <param name="name">The name of the field to get.</param>
   bool HasField(const std::string& name) const;
+
   /// <summary>
   /// Returns the value of the given field, or null if the field doesn't exist.
+  /// This also returns null if an error occurs.
   /// </summary>
   /// <param name="name">The name of the field to get.</param>
   Value GetFieldValue(const std::string& name) const;
+  /// <summary>
+  /// Gets the value of the given field.  This returns success and uses null if
+  /// the field doesn't exist.
+  /// </summary>
+  /// <param name="name">The name of the field to get.</param>
+  /// <param name="value">Will be filled with the value.</param>
+  /// <param name="errors">Will be filled with any errors that happen.</param>
+  /// <returns>True on success, false on error.</returns>
+  bool GetFieldValue(const std::string& name, Value* value,
+                     ErrorCollection* errors) const;
+
+  /// <summary>
+  /// Erases any cached values stored by this object.  Fields will need to be
+  /// parsed again when getting their values.  Note that if the underlying file
+  /// was changed, this won't update field types/layout, only their values.  So
+  /// if a conditional branch changed, the field values will be incorrect.  Use
+  /// ReparseObject to update conditional branches.
+  /// </summary>
+  void ClearCache();
+
+  /// <summary>
+  /// Reparses the object to determine which fields exist.  This also clears
+  /// any existing cached values.  Note that if a parent object is reparsed,
+  /// this instance is no longer valid; this function invalidates any child
+  /// FileObject.
+  /// </summary>
+  /// <param name="errors">Will be filled with any errors that happen.</param>
+  /// <returns>True on success, false on error.</returns>
+  bool ReparseObject(ErrorCollection* errors);
 
  private:
   friend std::shared_ptr<FileObject> MakeFileObject(const FileObjectInit&);
   friend struct FileObjectDeleter;
   FileObject(const FileObjectInit& init_data);
   ~FileObject();
+
+  /// <summary>
+  /// Ensures the field at the given index has been parsed and its value is
+  /// cached.
+  /// </summary>
+  bool EnsureField(size_t index, ErrorCollection* errors) const;
 
   struct Impl;
   std::unique_ptr<Impl> impl_;

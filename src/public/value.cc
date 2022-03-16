@@ -28,6 +28,7 @@ T cast_variant_number(const Variant& value) {
   switch (static_cast<ValueType>(value.index())) {
     default:
     case ValueType::Null:
+    case ValueType::Object:
       return 0;
     case ValueType::Boolean:
       return std::get<bool>(value) ? 1 : 0;
@@ -62,6 +63,8 @@ bool Value::as_bool() const {
       return std::get<int64_t>(value_) != 0;
     case ValueType::Double:
       return std::get<double>(value_) != 0;
+    case ValueType::Object:
+      return true;
   }
 }
 
@@ -75,6 +78,12 @@ int64_t Value::as_signed() const {
 
 double Value::as_double() const {
   return cast_variant_number<double>(value_);
+}
+
+std::shared_ptr<FileObject> Value::as_object() const {
+  if (!is_object())
+    return nullptr;
+  return std::get<std::shared_ptr<FileObject>>(value_);
 }
 
 bool Value::operator==(const Value& other) const {
@@ -110,11 +119,12 @@ bool Value::operator==(const Value& other) const {
     }
   }
 
+  // TODO: Add comparing objects.
   return value_ == other.value_;
 }
 
 bool Value::operator<(const Value& other) const {
-  // null < bool < numbers
+  // null < bool < numbers < objects
   const auto other_type = other.value_type();
   switch (value_type()) {
     default:
@@ -136,7 +146,7 @@ bool Value::operator<(const Value& other) const {
         return static_cast<double>(std::get<uint64_t>(value_)) <
                std::get<double>(other.value_);
       } else {
-        return false;
+        return other_type == ValueType::Object;
       }
     case ValueType::SignedInt:
       if (other_type == ValueType::UnsignedInt) {
@@ -149,7 +159,7 @@ bool Value::operator<(const Value& other) const {
         return static_cast<double>(std::get<int64_t>(value_)) <
                std::get<double>(other.value_);
       } else {
-        return false;
+        return other_type == ValueType::Object;
       }
     case ValueType::Double:
       if (other_type == ValueType::UnsignedInt) {
@@ -161,8 +171,11 @@ bool Value::operator<(const Value& other) const {
       } else if (other_type == ValueType::Double) {
         return std::get<double>(value_) < std::get<double>(other.value_);
       } else {
-        return false;
+        return other_type == ValueType::Object;
       }
+    case ValueType::Object:
+      // TODO: Add comparing objects.
+      return false;
   }
 }
 

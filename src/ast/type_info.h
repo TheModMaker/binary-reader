@@ -16,6 +16,7 @@
 #define BINARY_READER_AST_TYPE_INFO_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -24,6 +25,7 @@
 #include "binary_reader/value.h"
 #include "util/buffered_file_reader.h"
 #include "util/macros.h"
+#include "util/size.h"
 
 namespace binary_reader {
 
@@ -35,7 +37,8 @@ class TypeInfoBase {
   NON_COPYABLE_OR_MOVABLE_TYPE(TypeInfoBase);
 
  public:
-  TypeInfoBase(const std::string& alias_name, const std::string& base_name);
+  TypeInfoBase(const std::string& alias_name, const std::string& base_name,
+               std::optional<Size> static_size);
   virtual ~TypeInfoBase();
 
   static std::vector<std::shared_ptr<TypeInfoBase>> GetBuiltInTypes();
@@ -45,6 +48,9 @@ class TypeInfoBase {
   }
   const std::string& base_name() const {
     return base_name_;
+  }
+  std::optional<Size> static_size() const {
+    return static_size_;
   }
 
   virtual bool equals(const TypeInfoBase& other) const;
@@ -71,6 +77,7 @@ class TypeInfoBase {
  private:
   const std::string alias_name_;
   const std::string base_name_;
+  const std::optional<Size> static_size_;
 };
 
 /// <summary>
@@ -80,12 +87,9 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
   NON_COPYABLE_OR_MOVABLE_TYPE(IntegerTypeInfo);
 
  public:
-  IntegerTypeInfo(const std::string& alias_name, size_t size, Signedness sign,
+  IntegerTypeInfo(const std::string& alias_name, Size size, Signedness sign,
                   ByteOrder order);
 
-  size_t size() const {
-    return size_;
-  }
   Signedness signedness() const {
     return sign_;
   }
@@ -99,7 +103,6 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
                  ErrorCollection* errors) const override;
 
  private:
-  const size_t size_;
   const Signedness sign_;
   const ByteOrder order_;
 };

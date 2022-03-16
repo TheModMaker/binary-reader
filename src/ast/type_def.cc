@@ -31,7 +31,7 @@ bool FieldInfo::equals(const Statement& other) const {
 }
 
 TypeDefinition::TypeDefinition(const std::string& name)
-    : TypeInfoBase(name, name) {}
+    : TypeInfoBase(name, name, std::nullopt) {}
 
 bool TypeDefinition::equals(const TypeInfoBase& other) const {
   if (auto* o = dynamic_cast<const TypeDefinition*>(&other)) {

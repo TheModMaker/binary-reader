@@ -15,10 +15,13 @@
 #ifndef BINARY_READER_INCLUDE_VALUE_H_
 #define BINARY_READER_INCLUDE_VALUE_H_
 
+#include <memory>
 #include <type_traits>
 #include <variant>
 
 namespace binary_reader {
+
+class FileObject;
 
 enum class ValueType {
   Null,
@@ -26,6 +29,7 @@ enum class ValueType {
   UnsignedInt,
   SignedInt,
   Double,
+  Object,
 };
 
 /// <summary>
@@ -38,17 +42,19 @@ enum class ValueType {
 /// Numbers are stored as accurately as given.  For the sake of comparisons,
 /// they are compared by value.  Other value types are compared as follows:
 ///
-/// null < boolean < numbers
+/// null < boolean < numbers < objects
 /// </summary>
 class Value sealed {
  public:
   Value() : Value(nullptr) {}
   template <typename T, typename = std::enable_if_t<
                             std::is_same_v<T, std::nullptr_t> ||
+                            std::is_same_v<T, std::shared_ptr<FileObject>> ||
                             std::is_same_v<T, bool> || std::is_arithmetic_v<T>>>
   explicit Value(T value) {
-    if constexpr (std::is_same_v<std::nullptr_t, T> ||
-                  std::is_same_v<bool, T>) {
+    if constexpr (std::is_same_v<T, std::nullptr_t> ||
+                  std::is_same_v<T, std::shared_ptr<FileObject>> ||
+                  std::is_same_v<T, bool>) {
       value_ = value;
     } else if constexpr (std::is_arithmetic_v<T>) {
       if constexpr (std::is_floating_point_v<T>) {
@@ -101,17 +107,23 @@ class Value sealed {
     return value_.index() == 0;
   }
   bool is_number() const {
-    return value_.index() > 1;
+    return value_.index() > 1 && value_.index() < 5;
+  }
+  bool is_object() const {
+    return value_.index() == 5;
   }
 
   bool as_bool() const;
   uint64_t as_unsigned() const;
   int64_t as_signed() const;
   double as_double() const;
+  std::shared_ptr<FileObject> as_object() const;
 
  private:
   // Order and types must match ValueType enum.
-  std::variant<std::nullptr_t, bool, uint64_t, int64_t, double> value_;
+  std::variant<std::nullptr_t, bool, uint64_t, int64_t, double,
+               std::shared_ptr<FileObject>>
+      value_;
 };
 
 }  // namespace binary_reader

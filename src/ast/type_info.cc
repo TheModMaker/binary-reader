@@ -19,16 +19,19 @@
 namespace binary_reader {
 
 TypeInfoBase::TypeInfoBase(const std::string& alias_name,
-                           const std::string& base_name)
-    : alias_name_(alias_name), base_name_(base_name) {}
+                           const std::string& base_name,
+                           std::optional<Size> static_size)
+    : alias_name_(alias_name),
+      base_name_(base_name),
+      static_size_(static_size) {}
 
 TypeInfoBase::~TypeInfoBase() {}
 
 std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
   std::vector<std::shared_ptr<TypeInfoBase>> ret;
-#define MAKE(id, size, sign)                                               \
-  ret.emplace_back(std::make_shared<IntegerTypeInfo>((id), (size), (sign), \
-                                                     ByteOrder::Unset))
+#define MAKE(id, size, sign)                          \
+  ret.emplace_back(std::make_shared<IntegerTypeInfo>( \
+      (id), Size::FromBits(size), (sign), ByteOrder::Unset))
   MAKE("byte", 8, Signedness::Unsigned);
   MAKE("sbyte", 8, Signedness::Signed);
   MAKE("int8", 8, Signedness::Signed);
@@ -44,7 +47,8 @@ std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
 }
 
 bool TypeInfoBase::equals(const TypeInfoBase& other) const {
-  return alias_name_ == other.alias_name_ && base_name_ == other.base_name_;
+  return alias_name_ == other.alias_name_ && base_name_ == other.base_name_ &&
+         static_size_ == other.static_size_;
 }
 
 bool TypeInfoBase::ReadValue(BufferedFileReader*, Value*,
@@ -54,16 +58,13 @@ bool TypeInfoBase::ReadValue(BufferedFileReader*, Value*,
 }
 
 
-IntegerTypeInfo::IntegerTypeInfo(const std::string& alias_name, size_t size,
+IntegerTypeInfo::IntegerTypeInfo(const std::string& alias_name, Size size,
                                  Signedness sign, ByteOrder order)
-    : TypeInfoBase(alias_name, "integer"),
-      size_(size),
-      sign_(sign),
-      order_(order) {}
+    : TypeInfoBase(alias_name, "integer", size), sign_(sign), order_(order) {}
 
 bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {
   if (auto* o = dynamic_cast<const IntegerTypeInfo*>(&other)) {
-    return size_ == o->size_ && sign_ == o->sign_ && order_ == o->order_ &&
+    return sign_ == o->sign_ && order_ == o->order_ &&
            TypeInfoBase::equals(other);
   }
   return false;
@@ -71,17 +72,17 @@ bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {
 
 bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
                                 ErrorCollection* errors) const {
+  const size_t size = static_size()->bit_count();
   const uint8_t bit_offset = reader->position().bit_offset();
-  const size_t final_bits = (reader->position().bit_offset() + size_) % 8;
-  const size_t byte_count =
-      (bit_offset + size_) / 8 + (final_bits != 0 ? 1 : 0);
+  const size_t final_bits = (reader->position().bit_offset() + size) % 8;
+  const size_t byte_count = (bit_offset + size) / 8 + (final_bits != 0 ? 1 : 0);
   if (order_ == ByteOrder::LittleEndian &&
       (bit_offset != 0 || final_bits != 0)) {
     errors->AddError("Little endian integers must be byte aligned",
                      reader->position().byte_count());
     return false;
   }
-  if (!reader->EnsureBuffer(Size::FromBits(size_), errors))
+  if (!reader->EnsureBuffer(*static_size(), errors))
     return false;
 
   const uint8_t* buffer;
@@ -98,7 +99,7 @@ bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
   if (bit_offset != 0) {
     // Read most significant bits to least.
     const size_t mask = (1ull << (8 - bit_offset)) - 1;
-    const size_t shift = 8 - std::min<size_t>(size_ + bit_offset, 8);
+    const size_t shift = 8 - std::min<size_t>(size + bit_offset, 8);
     value = (buffer[0] & mask) >> shift;
     index++;
   }
@@ -117,16 +118,16 @@ bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
     value |= (buffer[index] >> final_bits);
   }
 
-  if (sign_ == Signedness::Signed && (value & (1ull << (size_ - 1)))) {
+  if (sign_ == Signedness::Signed && (value & (1ull << (size - 1)))) {
     // If the value is negative, then fill remaining high-level bits with 1
     // so the value is still negative.
-    if (size_ != 64)
-      value |= ~((1ull << size_) - 1);
+    if (size != 64)
+      value |= ~((1ull << size) - 1);
     *result = static_cast<int64_t>(value);
   } else {
     *result = value;
   }
-  return reader->Skip(Size::FromBits(size_), errors);
+  return reader->Skip(Size::FromBits(size), errors);
 }
 
 }  // namespace binary_reader

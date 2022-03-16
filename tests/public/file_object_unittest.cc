@@ -15,22 +15,53 @@
 #include "binary_reader/file_object.h"
 
 #include "gtest_wrapper.h"
+#include "mocks.h"
 #include "public/file_object_init.h"
 
 namespace binary_reader {
 
+namespace {
+
+std::shared_ptr<IntegerTypeInfo> MakeInt(size_t bits) {
+  return std::make_shared<IntegerTypeInfo>(
+      "", Size::FromBits(bits), Signedness::Unsigned, ByteOrder::BigEndian);
+}
+
+}  // namespace
+
 class FileObjectTest : public testing::Test {
  protected:
-  std::shared_ptr<FileObject> MakeObject(
+  std::shared_ptr<FileObject> MakeObjectFromFields(
       const std::vector<std::pair<std::string, Value>>& fields) {
     FileObjectInit init;
-    init.fields = fields;
+    init.test_fields = fields;
     return MakeFileObject(init);
+  }
+
+  std::shared_ptr<FileObject> MakeObjectFromFile(
+      std::shared_ptr<TypeDefinition> type,
+      std::initializer_list<uint8_t> data) {
+    auto file = std::make_shared<MockFileReader>(data);
+    EXPECT_CALL(*file, Seek(testing::Pointee(0), testing::_))
+        .WillOnce(testing::Return(true));
+    EXPECT_CALL(*file, Seek(testing::Pointee(data.size()), testing::_))
+        .WillOnce(testing::Return(true));
+
+    FileObjectInit init;
+    init.file = std::make_shared<BufferedFileReader>(file);
+    init.type = type;
+    init.start_position = Size{};
+
+    auto ret = MakeFileObject(init);
+    ErrorCollection errors;
+    if (ret && !ret->ReparseObject(&errors))
+      ret.reset();
+    return ret;
   }
 };
 
-TEST_F(FileObjectTest, BasicFlow) {
-  auto obj = MakeObject({{"foo", Value{1}}});
+TEST_F(FileObjectTest, BasicFlow_TestMode) {
+  auto obj = MakeObjectFromFields({{"foo", Value{1}}});
   ASSERT_TRUE(obj);
   EXPECT_TRUE(obj->HasField("foo"));
   EXPECT_FALSE(obj->HasField("bar"));
@@ -49,6 +80,42 @@ TEST_F(FileObjectTest, BasicFlow) {
   ASSERT_NE(it2, obj->end());
   EXPECT_EQ(it2->first, "foo");
   EXPECT_EQ(it2->second, Value{1});
+  EXPECT_EQ(obj->find("c"), obj->end());
+}
+
+TEST_F(FileObjectTest, BasicFlow_NormalMode) {
+  auto def = std::make_shared<TypeDefinition>("");
+  def->statements().emplace_back(std::make_shared<FieldInfo>("a", MakeInt(16)));
+  def->statements().emplace_back(std::make_shared<FieldInfo>("b", MakeInt(32)));
+
+  auto obj = MakeObjectFromFile(def, {0x11, 0x22, 0x55, 0x66, 0x77, 0x88});
+  ASSERT_TRUE(obj);
+  EXPECT_TRUE(obj->HasField("a"));
+  EXPECT_TRUE(obj->HasField("b"));
+  EXPECT_FALSE(obj->HasField("c"));
+  EXPECT_EQ(obj->GetFieldValue("a"), Value{0x1122});
+  EXPECT_EQ(obj->GetFieldValue("b"), Value{0x55667788});
+  EXPECT_EQ(obj->GetFieldValue("c"), Value{});
+
+  EXPECT_NE(obj->begin(), obj->end());
+  size_t i = 0;
+  for (auto it = obj->begin(); it != obj->end(); it++, i++) {
+    if (i == 0) {
+      EXPECT_EQ(it->first, "a");
+      EXPECT_EQ(it->second, Value{0x1122});
+    } else if (i == 1) {
+      EXPECT_EQ(it->first, "b");
+      EXPECT_EQ(it->second, Value{0x55667788});
+    } else {
+      FAIL();
+    }
+  }
+
+  auto it2 = obj->find("a");
+  ASSERT_NE(it2, obj->end());
+  EXPECT_EQ(it2->first, "a");
+  EXPECT_EQ(it2->second, Value{0x1122});
+  EXPECT_EQ(obj->find("c"), obj->end());
 }
 
 }  // namespace binary_reader

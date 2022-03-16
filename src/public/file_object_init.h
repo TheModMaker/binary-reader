@@ -20,16 +20,25 @@
 #include <utility>
 #include <vector>
 
+#include "ast/type_def.h"
 #include "binary_reader/file_object.h"
+#include "binary_reader/file_system.h"
 #include "binary_reader/value.h"
+#include "util/size.h"
 
 namespace binary_reader {
 
-struct FileObjectInit {
-  std::vector<std::pair<std::string, Value>> fields;
+struct FileObjectInit sealed {
+  // Normal mode
+  std::shared_ptr<BufferedFileReader> file;
+  std::shared_ptr<TypeDefinition> type;
+  Size start_position;
+
+  // Test only mode
+  std::vector<std::pair<std::string, Value>> test_fields;
 };
 
-struct FileObjectDeleter {
+struct FileObjectDeleter sealed {
   void operator()(FileObject* o) {
     delete o;
   }
