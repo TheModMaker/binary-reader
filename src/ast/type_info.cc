@@ -105,11 +105,11 @@ bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,
   }
   for (; index < byte_count - 1 || (index == byte_count - 1 && final_bits == 0);
        index++) {
-    if (order_ == ByteOrder::BigEndian) {
+    if (order_ == ByteOrder::LittleEndian) {
+      value |= static_cast<uint64_t>(buffer[index]) << (8u * index);
+    } else {
       value <<= 8;
       value |= buffer[index];
-    } else {
-      value |= static_cast<uint64_t>(buffer[index]) << (8u * index);
     }
   }
 

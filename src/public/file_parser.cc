@@ -16,6 +16,7 @@
 
 #include "ast/type_def.h"
 #include "parser/definition_parser.h"
+#include "util/buffered_file_reader.h"
 
 namespace binary_reader {
 
@@ -203,11 +204,27 @@ std::shared_ptr<FileObject> FileParser::ParseFile(
   return ParseFile(reader, type, nullptr);
 }
 
-std::shared_ptr<FileObject> FileParser::ParseFile(std::shared_ptr<FileReader>,
-                                                  const std::string&,
-                                                  ErrorCollection*) {
-  // TODO: Handle reading binary files.
-  return nullptr;
+std::shared_ptr<FileObject> FileParser::ParseFile(std::shared_ptr<FileReader> file,
+                                                  const std::string& type,
+                                                  ErrorCollection* errors) {
+  std::shared_ptr<TypeDefinition> def;
+  for (auto d : impl_->definitions) {
+    if (d->alias_name() == type) {
+      def = d;
+      break;
+    }
+  }
+  if (!def) {
+    if (errors)
+      errors->AddError("Unknown type " + type);
+    return nullptr;
+  }
+
+  auto reader = std::make_shared<BufferedFileReader>(file);
+  Value val;
+  if (!def->ReadValue(reader, &val, errors))
+    return nullptr;
+  return val.as_object();
 }
 
 FileParser::FileParser(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}

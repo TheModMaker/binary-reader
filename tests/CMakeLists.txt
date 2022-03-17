@@ -19,6 +19,7 @@ add_executable(
     "ast/type_info_unittest.cc"
     "parser/definition_parser_unittest.cc"
     "public/file_object_unittest.cc"
+    "public/file_parser_integration.cc"
     "public/file_system_unittest.cc"
     "public/value_unittest.cc"
     "util/buffered_file_reader_unittest.cc"
