@@ -71,8 +71,8 @@ class TypeInfoBase {
   /// <param name="result">Will be filled in with the result.</param>
   /// <param name="errors">Will be filled in with any errors.</param>
   /// <returns>True on success, false on error.</returns>
-  virtual bool ReadValue(BufferedFileReader* reader, Value* result,
-                         ErrorCollection* errors) const;
+  virtual bool ReadValue(std::shared_ptr<BufferedFileReader> reader,
+                         Value* result, ErrorCollection* errors) const;
 
  private:
   const std::string alias_name_;
@@ -99,7 +99,7 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
 
   bool equals(const TypeInfoBase& other) const override;
 
-  bool ReadValue(BufferedFileReader* reader, Value* result,
+  bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,
                  ErrorCollection* errors) const override;
 
  private:

@@ -14,7 +14,31 @@
 
 #include "ast/type_def.h"
 
+#include <cassert>
+
+#include "binary_reader/file_object.h"
+#include "public/file_object_init.h"
+
 namespace binary_reader {
+
+namespace {
+
+std::optional<Size> CalculateSize(
+    const std::vector<std::shared_ptr<Statement>>& statements) {
+  Size size;
+  for (const auto& stmt : statements) {
+    if (auto field = std::dynamic_pointer_cast<FieldInfo>(stmt)) {
+      if (!field->type() || !field->type()->static_size())
+        return std::nullopt;
+      size += *field->type()->static_size();
+    } else {
+      assert(false);
+    }
+  }
+  return size;
+}
+
+}  // namespace
 
 Statement::Statement() {}
 Statement::~Statement() {}
@@ -30,8 +54,25 @@ bool FieldInfo::equals(const Statement& other) const {
   return false;
 }
 
-TypeDefinition::TypeDefinition(const std::string& name)
-    : TypeInfoBase(name, name, std::nullopt) {}
+TypeDefinition::TypeDefinition(
+    const std::string& name,
+    const std::vector<std::shared_ptr<Statement>>& statements)
+    : TypeInfoBase(name, name, CalculateSize(statements)),
+      statements_(statements) {}
+
+bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
+                               Value* result, ErrorCollection* errors) const {
+  FileObjectInit init;
+  init.file = reader;
+  init.type = shared_from_this();
+  init.start_position = reader->position();
+
+  auto ret = MakeFileObject(init);
+  if (!ret->ReparseObject(errors))
+    return false;
+  *result = ret;
+  return reader->Seek(init.start_position + *static_size(), errors);
+}
 
 bool TypeDefinition::equals(const TypeInfoBase& other) const {
   if (auto* o = dynamic_cast<const TypeDefinition*>(&other)) {

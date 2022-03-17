@@ -28,74 +28,33 @@ namespace {
 struct Stack sealed {
   NON_COPYABLE_OR_MOVABLE_TYPE(Stack);
 
-  struct DoPop sealed {
-    NON_COPYABLE_OR_MOVABLE_TYPE(DoPop);
-
-    explicit DoPop(Stack* stack) : stack_(stack) {}
-    ~DoPop() {
-      stack_->entries_.pop_back();
-    }
-
-    Stack* stack_;
-  };
-
-  Stack()
-      : default_types_(TypeInfoBase::GetBuiltInTypes()),
-        dummy_(std::make_shared<FieldInfo>("", nullptr)) {
-    // Create a dummy entry to hold the global statements.
-    entries_.emplace_back(std::make_shared<TypeDefinition>("<global>"));
-  }
-
-  std::shared_ptr<TypeDefinition> top() {
-    return entries_.back();
-  }
-
-  DoPop AddType(const std::string& name) {
-    entries_.emplace_back(std::make_shared<TypeDefinition>(name));
-    return DoPop(this);
-  }
+  Stack() : default_types_(TypeInfoBase::GetBuiltInTypes()) {}
 
   std::shared_ptr<TypeInfoBase> GetType(const std::string& name) {
-    auto mem = FindMember(name, /* inherit= */ true);
-    if (mem == dummy_) {
-      for (auto t : default_types_) {
-        if (t->alias_name() == name)
-          return t;
-      }
+    for (auto t : types_) {
+      if (t->alias_name() == name)
+        return t;
     }
-    return std::dynamic_pointer_cast<TypeInfoBase>(mem);
+    for (auto t : default_types_) {
+      if (t->alias_name() == name)
+        return t;
+    }
+    return nullptr;
   }
 
-  std::shared_ptr<Statement> FindMember(const std::string& name, bool inherit) {
-    for (auto it = entries_.rbegin(); it != entries_.rend(); it++) {
-      for (const auto stmt : (*it)->statements()) {
-        if (auto t = std::dynamic_pointer_cast<TypeDefinition>(stmt)) {
-          if (t->alias_name() == name)
-            return t;
-        } else if (auto f = std::dynamic_pointer_cast<FieldInfo>(stmt)) {
-          if (f->name() == name)
-            return f;
-        }
+  std::shared_ptr<Statement> FindMember(const std::string& name) {
+    for (auto stmt : statements_) {
+      if (auto field = std::dynamic_pointer_cast<FieldInfo>(stmt)) {
+        if (field->name() == name)
+          return field;
       }
-
-      if (!inherit)
-        return nullptr;
-      if (name == (*it)->alias_name())
-        return *it;
-    }
-    for (auto type : default_types_) {
-      if (type->alias_name() == name)
-        return dummy_;
     }
     return nullptr;
   }
 
   const std::vector<std::shared_ptr<TypeInfoBase>> default_types_;
-  // This is a dummy field that exists so we can return a truthy value when a
-  // default alias exists.  This will get removed once aliases are supported
-  // generically.
-  const std::shared_ptr<Statement> dummy_;
-  std::vector<std::shared_ptr<TypeDefinition>> entries_;
+  std::vector<std::shared_ptr<TypeDefinition>> types_;
+  std::vector<std::shared_ptr<Statement>> statements_;
 };
 
 class Visitor : public antlr4::AntlrBinaryVisitor {
@@ -108,14 +67,16 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   antlrcpp::Any visitMain(
       antlr4::AntlrBinaryParser::MainContext* ctx) override {
     for (auto* field : ctx->globalDefinition()) {
-      HandleMember(field->accept(this), field->start);
+      auto parsed_type =
+          field->accept(this).as<std::shared_ptr<TypeDefinition>>();
+      if (stack_.GetType(parsed_type->alias_name())) {
+        AddError("Cannot shadow existing type " + parsed_type->alias_name(),
+                 field->start);
+      }
+      stack_.types_.emplace_back(parsed_type);
+      defs_->emplace_back(parsed_type);
     }
 
-    for (auto stmt : stack_.top()->statements()) {
-      if (auto def = std::dynamic_pointer_cast<TypeDefinition>(stmt)) {
-        defs_->emplace_back(def);
-      }
-    }
     return {};
   }
 
@@ -124,12 +85,21 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
 
   antlrcpp::Any visitTypeDefinition(
       antlr4::AntlrBinaryParser::TypeDefinitionContext* ctx) override {
-    auto pop_stack = stack_.AddType(ctx->IDENTIFIER()->getText());
-
     for (auto* field : ctx->typeMember()) {
-      HandleMember(field->accept(this), field->start);
+      auto parsed_field = field->accept(this).as<std::shared_ptr<FieldInfo>>();
+      if (stack_.FindMember(parsed_field->name())) {
+        AddError("Cannot shadow existing member " + parsed_field->name(),
+                 field->start);
+      } else if (stack_.GetType(parsed_field->name()) ||
+                 parsed_field->name() == ctx->IDENTIFIER()->getText()) {
+        AddError("Shadowing type " + parsed_field->name(), field->start,
+                 ErrorLevel::Warning);
+      }
+      stack_.statements_.push_back(parsed_field);
     }
-    return stack_.top();
+
+    return std::make_shared<TypeDefinition>(ctx->IDENTIFIER()->getText(),
+                                            stack_.statements_);
   }
 
   antlrcpp::Any visitDataField(
@@ -172,39 +142,6 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
 
   /////////////////////////////////////////////////////////////////////////////
   // Utilities
-
-  /// <summary>
-  /// Handles adding a new member to the current stack entry
-  /// </summary>
-  /// <param name="field_data">The new entry to add.</param>
-  /// <param name="start">The token to use for debug info.</param>
-  void HandleMember(antlrcpp::Any field_data, antlr4::Token* start) {
-    // This is also called for top-level definitions, which can't have fields.
-    // However, the grammar ensures that this doesn't happen so those paths
-    // won't get taken.
-    std::string field_name;
-    if (field_data.is<std::shared_ptr<FieldInfo>>()) {
-      field_name = field_data.as<std::shared_ptr<FieldInfo>>()->name();
-    } else {
-      field_name =
-          field_data.as<std::shared_ptr<TypeDefinition>>()->alias_name();
-    }
-
-    if (stack_.FindMember(field_name, /* inherit= */ false)) {
-      AddError("Cannot shadow existing member " + field_name, start);
-    } else if (stack_.FindMember(field_name, /* inherit= */ true)) {
-      AddError("Shadowing existing member " + field_name, start,
-               ErrorLevel::Warning);
-    }
-
-    if (field_data.is<std::shared_ptr<FieldInfo>>()) {
-      stack_.top()->statements().emplace_back(
-          field_data.as<std::shared_ptr<FieldInfo>>());
-    } else {
-      stack_.top()->statements().emplace_back(
-          field_data.as<std::shared_ptr<TypeDefinition>>());
-    }
-  }
 
   void AddError(const std::string& message, antlr4::Token* token,
                 ErrorLevel level = ErrorLevel::Error) {

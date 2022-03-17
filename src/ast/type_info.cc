@@ -51,7 +51,7 @@ bool TypeInfoBase::equals(const TypeInfoBase& other) const {
          static_size_ == other.static_size_;
 }
 
-bool TypeInfoBase::ReadValue(BufferedFileReader*, Value*,
+bool TypeInfoBase::ReadValue(std::shared_ptr<BufferedFileReader>, Value*,
                              ErrorCollection* errors) const {
   errors->AddError("ReadValue not implemented for this type");
   return false;
@@ -70,8 +70,8 @@ bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {
   return false;
 }
 
-bool IntegerTypeInfo::ReadValue(BufferedFileReader* reader, Value* result,
-                                ErrorCollection* errors) const {
+bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,
+                                Value* result, ErrorCollection* errors) const {
   const size_t size = static_size()->bit_count();
   const uint8_t bit_offset = reader->position().bit_offset();
   const size_t final_bits = (reader->position().bit_offset() + size) % 8;

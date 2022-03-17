@@ -61,25 +61,29 @@ class FieldInfo sealed : public Statement {
   const std::shared_ptr<TypeInfoBase> type_;
 };
 
-class TypeDefinition sealed : public TypeInfoBase, public Statement {
+class TypeDefinition sealed
+    : public TypeInfoBase,
+      public Statement,
+      public std::enable_shared_from_this<TypeDefinition> {
   NON_COPYABLE_OR_MOVABLE_TYPE(TypeDefinition);
 
  public:
-  TypeDefinition(const std::string& name);
+  TypeDefinition(const std::string& name,
+                 const std::vector<std::shared_ptr<Statement>>& statements);
 
   const std::vector<std::shared_ptr<Statement>>& statements() const {
     return statements_;
   }
-  std::vector<std::shared_ptr<Statement>>& statements() {
-    return statements_;
-  }
+
+  bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,
+                 ErrorCollection* errors) const override;
 
  private:
   bool equals(const TypeInfoBase& other) const override;
   bool equals(const Statement& other) const override;
   bool equals(const TypeDefinition* other) const;
 
-  std::vector<std::shared_ptr<Statement>> statements_;
+  const std::vector<std::shared_ptr<Statement>> statements_;
 };
 
 }  // namespace binary_reader

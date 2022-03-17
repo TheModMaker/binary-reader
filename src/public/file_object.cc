@@ -211,7 +211,7 @@ bool FileObject::EnsureField(size_t index, ErrorCollection* errors) const {
   if (!impl_->init.file->Seek(info.offset, errors))
     return false;
   Value temp;
-  if (!info.type->ReadValue(impl_->init.file.get(), &temp, errors))
+  if (!info.type->ReadValue(impl_->init.file, &temp, errors))
     return false;
   info.value = temp;
   return true;

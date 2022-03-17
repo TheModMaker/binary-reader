@@ -31,7 +31,7 @@ namespace binary_reader {
 struct FileObjectInit sealed {
   // Normal mode
   std::shared_ptr<BufferedFileReader> file;
-  std::shared_ptr<TypeDefinition> type;
+  std::shared_ptr<const TypeDefinition> type;
   Size start_position;
 
   // Test only mode

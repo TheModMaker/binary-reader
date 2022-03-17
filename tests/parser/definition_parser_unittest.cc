@@ -96,15 +96,10 @@ TEST(DefinitionParserTest, ParseFile_Fields) {
   CheckInteger(field->type(), "uint16", 16, Signedness::Unsigned);
 }
 
-TEST(DefinitionParserTest, ParseFile_CanUseRecursiveTypes) {
+TEST(DefinitionParserTest, ParseFile_CantUseRecursiveTypes) {
   std::vector<std::shared_ptr<TypeDefinition>> defs;
   std::shared_ptr<FieldInfo> field;
-  ASSERT_TRUE(ParseSuccess("type foo { foo x; }", &defs));
-  ASSERT_EQ(defs.size(), 1u);
-
-  ASSERT_TRUE((field = as_field(defs[0]->statements()[0])));
-  EXPECT_EQ(field->type(), defs[0]);
-  EXPECT_EQ(field->name(), "x");
+  ASSERT_FALSE(ParseSuccess("type foo { foo x; }", &defs));
 }
 
 TEST(DefinitionParserTest, ParseFile_Errors) {

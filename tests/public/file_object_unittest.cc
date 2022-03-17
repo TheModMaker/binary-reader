@@ -84,9 +84,11 @@ TEST_F(FileObjectTest, BasicFlow_TestMode) {
 }
 
 TEST_F(FileObjectTest, BasicFlow_NormalMode) {
-  auto def = std::make_shared<TypeDefinition>("");
-  def->statements().emplace_back(std::make_shared<FieldInfo>("a", MakeInt(16)));
-  def->statements().emplace_back(std::make_shared<FieldInfo>("b", MakeInt(32)));
+  auto def = std::make_shared<TypeDefinition>(
+      "", std::vector<std::shared_ptr<Statement>>{
+              std::make_shared<FieldInfo>("a", MakeInt(16)),
+              std::make_shared<FieldInfo>("b", MakeInt(32)),
+          });
 
   auto obj = MakeObjectFromFile(def, {0x11, 0x22, 0x55, 0x66, 0x77, 0x88});
   ASSERT_TRUE(obj);
