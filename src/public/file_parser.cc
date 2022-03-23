@@ -164,22 +164,22 @@ std::vector<std::string> FileParser::GetTypeNames() const {
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(const std::string& path) {
-  return ParseFile(path, impl_->definitions.back()->alias_name(), nullptr);
+  return ParseFile(path, "", nullptr);
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(const std::string& path,
                                                   ErrorCollection* errors) {
-  return ParseFile(path, impl_->definitions.back()->alias_name(), errors);
+  return ParseFile(path, "", errors);
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(
     std::shared_ptr<FileReader> reader) {
-  return ParseFile(reader, impl_->definitions.back()->alias_name(), nullptr);
+  return ParseFile(reader, "", nullptr);
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(
     std::shared_ptr<FileReader> reader, ErrorCollection* errors) {
-  return ParseFile(reader, impl_->definitions.back()->alias_name(), errors);
+  return ParseFile(reader, "", errors);
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(const std::string& path,
@@ -196,7 +196,7 @@ std::shared_ptr<FileObject> FileParser::ParseFile(const std::string& path,
       errors->Add({path, "Error opening binary file", ErrorLevel::Error});
     return nullptr;
   }
-  return ParseFile(file, type, errors);
+  return ParseFile(file, path, type, errors);
 }
 
 std::shared_ptr<FileObject> FileParser::ParseFile(
@@ -204,27 +204,46 @@ std::shared_ptr<FileObject> FileParser::ParseFile(
   return ParseFile(reader, type, nullptr);
 }
 
+std::shared_ptr<FileObject> FileParser::ParseFile(
+    std::shared_ptr<FileReader> reader, const std::string& path,
+    const std::string& type) {
+  return ParseFile(reader, path, type, nullptr);
+}
+
 std::shared_ptr<FileObject> FileParser::ParseFile(std::shared_ptr<FileReader> file,
                                                   const std::string& type,
                                                   ErrorCollection* errors) {
+  return ParseFile(file, "", type, errors);
+}
+
+std::shared_ptr<FileObject> FileParser::ParseFile(std::shared_ptr<FileReader> file,
+                                                  const std::string& path,
+                                                  const std::string& type,
+                                                  ErrorCollection* errors) {
   std::shared_ptr<TypeDefinition> def;
-  for (auto d : impl_->definitions) {
-    if (d->alias_name() == type) {
-      def = d;
-      break;
+  if (type.empty()) {
+    def = impl_->definitions.back();
+  } else {
+    for (auto d : impl_->definitions) {
+      if (d->alias_name() == type) {
+        def = d;
+        break;
+      }
     }
   }
   if (!def) {
     if (errors)
-      errors->AddError("Unknown type " + type);
+      errors->Add({path, "Unknown type '" + type + "'"});
     return nullptr;
   }
 
-  auto reader = std::make_shared<BufferedFileReader>(file);
   Value val;
-  if (!def->ReadValue(reader, &val, errors))
-    return nullptr;
-  return val.as_object();
+  ErrorCollection cur_errors(path);
+  auto reader = std::make_shared<BufferedFileReader>(file);
+  const bool success = def->ReadValue(reader, &val, &cur_errors);
+  if (errors)
+    errors->AddAllFrom(cur_errors);
+  return success ? val.as_object() : nullptr;
 }
 
 FileParser::FileParser(std::unique_ptr<Impl> impl) : impl_(std::move(impl)) {}

@@ -15,6 +15,7 @@
 #ifndef BINARY_READER_INCLUDE_ERROR_H_
 #define BINARY_READER_INCLUDE_ERROR_H_
 
+#include <iostream>
 #include <string>
 
 namespace binary_reader {
@@ -58,6 +59,9 @@ struct ErrorInfo sealed {
   /// </summary>
   size_t column = 0;
 };
+
+std::ostream& operator<<(std::ostream& os, ErrorLevel level);
+std::ostream& operator<<(std::ostream& os, const ErrorInfo& error);
 
 }  // namespace binary_reader
 

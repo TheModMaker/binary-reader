@@ -142,6 +142,13 @@ class FileParser sealed {
   std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
                                         const std::string& type,
                                         ErrorCollection* errors);
+  std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
+                                        const std::string& path,
+                                        const std::string& type);
+  std::shared_ptr<FileObject> ParseFile(std::shared_ptr<FileReader> reader,
+                                        const std::string& path,
+                                        const std::string& type,
+                                        ErrorCollection* errors);
 
  private:
   struct Impl;

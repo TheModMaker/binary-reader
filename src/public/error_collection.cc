@@ -14,7 +14,42 @@
 
 #include "binary_reader/error_collection.h"
 
+#include <algorithm>
+#include <type_traits>
+
 namespace binary_reader {
+
+std::ostream& operator<<(std::ostream& os, ErrorLevel level) {
+  const char* kLevels[] = {
+      "error",
+      "warning",
+      "info",
+  };
+  auto l = static_cast<std::underlying_type<ErrorLevel>::type>(level);
+  if (l < 0 || l > sizeof(kLevels) / sizeof(kLevels[0]))
+    l = 0;
+  return os << kLevels[l];
+}
+
+std::ostream& operator<<(std::ostream& os, const ErrorInfo& error) {
+  if (error.file_path.empty()) {
+    // error: unknown type 'foo'
+    return os << error.level << ": " << error.message;
+  } else if (!error.line) {
+    // foo/bar.def: error: unknown type 'foo'
+    return os << error.file_path << ": " << error.level << ": "
+              << error.message;
+  } else if (!error.column) {
+    // foo/bar.def:6: error: unknown type 'foo'
+    return os << error.file_path << ":" << error.line << ": " << error.level
+              << ": " << error.message;
+  } else {
+    // foo/bar.def:6:12: error: unknown type 'foo'
+    return os << error.file_path << ":" << error.line << ":" << error.column
+              << ": " << error.level << ": " << error.message;
+  }
+}
+
 
 ErrorCollection::ErrorCollection() {}
 
@@ -45,6 +80,12 @@ void ErrorCollection::AddInfo(const std::string& message, uint64_t offset,
                               size_t line, size_t column) {
   errors_.push_back(
       {file_path_, message, ErrorLevel::Info, offset, line, column});
+}
+
+void ErrorCollection::AddAllFrom(const ErrorCollection& errors) {
+  errors_.reserve(errors_.size() + errors.errors_.size());
+  std::copy(errors.errors_.begin(), errors.errors_.end(),
+            std::back_inserter(errors_));
 }
 
 }  // namespace binary_reader
