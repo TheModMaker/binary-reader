@@ -38,6 +38,9 @@ if(MSVC)
       "${CMAKE_EXE_LINKER_FLAGS_DEBUG} msvcrtd.lib")
   SET(CMAKE_EXE_LINKER_FLAGS_RELEASE
       "${CMAKE_EXE_LINKER_FLAGS_RELEASE} msvcrt.lib")
+
+  # Ignore warnings in third-party code.
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /external:W0 /external:anglebrackets")
 ENDIF()
 
 # Load Antlr4
@@ -59,6 +62,15 @@ set(WITH_DEMO OFF)
 add_subdirectory(third_party/antlr4/runtime/Cpp)
 find_package(ANTLR REQUIRED)
 include_directories(third_party/antlr4/runtime/Cpp/runtime/src)
+
+# Load tclap
+FetchContent_Declare(
+  tclap_files
+  URL      https://downloads.sourceforge.net/project/tclap/tclap-1.4.0-rc1.tar.bz2
+  URL_HASH SHA1=a93c738d6e6320ae7fdda414af69d8844424fad7
+)
+FetchContent_MakeAvailable(tclap_files)
+include_directories(${tclap_files_SOURCE_DIR}/include)
 
 # Main library
 if(MSVC)
@@ -82,6 +94,7 @@ add_library(base_lib STATIC
             "src/public/file_object.cc"
             "src/public/file_parser.cc"
             "src/public/file_system.cc"
+            "src/public/json.cc"
             "src/public/value.cc"
             "src/util/buffered_file_reader.cc"
             "src/util/memory_file_system.cc"
@@ -90,6 +103,7 @@ target_link_libraries(base_lib parser)
 
 # Main executable
 add_executable(binary_reader
+               "src/app/command_line.cc"
                "src/app/main.cc"
 )
 target_link_libraries(binary_reader base_lib)

@@ -13,8 +13,34 @@
 // limitations under the License.
 
 #include <iostream>
-#include <sstream>
+#include <type_traits>
 
-int main() {
+#include "app/command_line.h"
+#include "binary_reader/file_parser.h"
+#include "binary_reader/json.h"
+
+using namespace binary_reader;
+
+int main(int argc, const char** argv) {
+  CommandLine cmd;
+  if (!cmd.Parse(argv, argc))
+    return 1;
+
+  ErrorCollection errors;
+  auto parser = FileParser::CreateFromFile(cmd.definition_path,
+                                           cmd.parser_options, &errors);
+  for (auto& err : errors)
+    std::cerr << err << "\n";
+  if (!parser)
+    return 1;
+
+  errors.clear();
+  auto file = parser->ParseFile(cmd.binary_path, cmd.type_name, &errors);
+  for (auto& err : errors)
+    std::cerr << err << "\n";
+  if (!file)
+    return 1;
+
+  DumpJsonObject(std::cout, cmd.json_options, file);
   return 0;
 }
