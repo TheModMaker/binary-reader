@@ -98,8 +98,10 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
       stack_.statements_.push_back(parsed_field);
     }
 
+    auto statements = std::move(stack_.statements_);
+    stack_.statements_.clear();
     return std::make_shared<TypeDefinition>(ctx->IDENTIFIER()->getText(),
-                                            stack_.statements_);
+                                            std::move(statements));
   }
 
   antlrcpp::Any visitDataField(
@@ -155,6 +157,32 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   ErrorCollection* const errors_;
 };
 
+class ErrorHandler sealed : public antlr4::ANTLRErrorListener {
+ public:
+  ErrorHandler(ErrorCollection* errors) : errors_(errors) {}
+
+  void syntaxError(antlr4::Recognizer*, antlr4::Token* token,
+                   size_t line, size_t pos, const std::string& msg,
+                   std::exception_ptr) override {
+    errors_->AddError(msg, token->getStartIndex(), line, pos);
+  }
+
+  void reportAmbiguity(antlr4::Parser*, const antlr4::dfa::DFA&, size_t, size_t,
+                       bool, const antlrcpp::BitSet&,
+                       antlr4::atn::ATNConfigSet*) override {}
+
+  void reportAttemptingFullContext(antlr4::Parser*, const antlr4::dfa::DFA&,
+                                   size_t, size_t, const antlrcpp::BitSet&,
+                                   antlr4::atn::ATNConfigSet*) override {}
+
+  void reportContextSensitivity(antlr4::Parser*, const antlr4::dfa::DFA&,
+                                size_t, size_t, size_t,
+                                antlr4::atn::ATNConfigSet*) override {}
+
+ private:
+  ErrorCollection* const errors_;
+};
+
 }  // namespace
 
 bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
@@ -166,11 +194,19 @@ bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
     antlr4::CommonTokenStream tokens(&lexer);
     antlr4::AntlrBinaryParser parser(&tokens);
 
+    // Disable default error handlers (e.g. console logging).
+    ErrorHandler error_handler(errors);
+    lexer.removeErrorListeners();
+    lexer.addErrorListener(&error_handler);
+    parser.removeErrorListeners();
+    parser.addErrorListener(&error_handler);
+
     Visitor visitor{path, defs, errors};
     visitor.visit(parser.main());
     return !errors->has_errors();
-  } catch (antlr4::RuntimeException&) {
-    // TODO: Report parser errors.
+  } catch (antlr4::RuntimeException& e) {
+    // TODO: Investigate if these ever happen.
+    errors->AddError(e.what());
     return false;
   }
 }

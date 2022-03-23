@@ -69,7 +69,7 @@ class TypeDefinition sealed
 
  public:
   TypeDefinition(const std::string& name,
-                 const std::vector<std::shared_ptr<Statement>>& statements);
+                 std::vector<std::shared_ptr<Statement>> statements);
 
   const std::vector<std::shared_ptr<Statement>>& statements() const {
     return statements_;

@@ -56,9 +56,9 @@ bool FieldInfo::equals(const Statement& other) const {
 
 TypeDefinition::TypeDefinition(
     const std::string& name,
-    const std::vector<std::shared_ptr<Statement>>& statements)
+    std::vector<std::shared_ptr<Statement>> statements)
     : TypeInfoBase(name, name, CalculateSize(statements)),
-      statements_(statements) {}
+      statements_(std::move(statements)) {}
 
 bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
                                Value* result, ErrorCollection* errors) const {
