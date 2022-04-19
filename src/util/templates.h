@@ -43,6 +43,11 @@ Dest clamp_cast(Source src) {
   }
 }
 
+template <typename T, size_t N>
+constexpr size_t arraysize(T (&)[N]) {
+  return N;
+}
+
 }  // namespace binary_reader
 
 #endif  // BINARY_READER_UTIL_TEMPLATES_H_
