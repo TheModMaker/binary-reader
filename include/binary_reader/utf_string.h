@@ -17,10 +17,13 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
-#include "binary_reader/codecs.h"
+#include "binary_reader/error.h"
 
 namespace binary_reader {
+
+class Codec;
 
 /// <summary>
 /// Defines a Unicode-aware string type that supports converting between
@@ -69,10 +72,44 @@ class UtfString {
                                 std::shared_ptr<Codec> codec, ErrorInfo* error);
 
   /// <summary>
+  /// Converts the given UTF-8 encoded string into a UtfString.  This uses the
+  /// built-in decoder and uses replacement characters for errors.
+  ///
+  /// Care should be taken when using this function as the input may not
+  /// actually be UTF-8.  This is especially true on Windows, where it will
+  /// usually use a system multi-byte encoding.
+  /// </summary>
+  /// <param name="str">The string to convert.</param>
+  /// <returns>The converted string.</returns>
+  static UtfString FromUtf8(const std::string& str);
+
+  /// <summary>
   /// Converts the current string to bytes using the given Codec.
   /// </summary>
   std::vector<uint8_t> AsBytes(std::shared_ptr<Codec> codec,
                                ErrorInfo* error) const;
+
+  /// <summary>
+  /// Converts the current string to a UTF-8 encoded string.  This uses the
+  /// built-in decoder and uses replacement characters for errors.
+  ///
+  /// Care should be taken when using this function as the output may not
+  /// be using UTF-8.  This is especially true on Windows, where it will
+  /// usually use a system multi-byte encoding.
+  /// </summary>
+  /// <returns>The converted string.</returns>
+  std::string AsUtf8() const;
+
+  /// <summary>
+  /// Converts the current string to a UTF-16 encoded string.  Since this type
+  /// uses UTF-16 internally, this will be the exact value, even with errors.
+  ///
+  /// On Windows, this should be usable for Unicode methods (e.g. CreateFileW).
+  /// </summary>
+  /// <returns>The converted string.</returns>
+  std::u16string AsUtf16() const {
+    return utf16_buffer_;
+  }
 
   /// <summary>
   /// Returns whether the string is empty.

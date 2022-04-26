@@ -19,6 +19,8 @@
 #include <type_traits>
 #include <variant>
 
+#include "binary_reader/utf_string.h"
+
 namespace binary_reader {
 
 class FileObject;
@@ -29,6 +31,7 @@ enum class ValueType {
   UnsignedInt,
   SignedInt,
   Double,
+  String,
   Object,
 };
 
@@ -49,10 +52,12 @@ class Value sealed {
   Value() : Value(nullptr) {}
   template <typename T, typename = std::enable_if_t<
                             std::is_same_v<T, std::nullptr_t> ||
+                            std::is_same_v<T, UtfString> ||
                             std::is_same_v<T, std::shared_ptr<FileObject>> ||
                             std::is_same_v<T, bool> || std::is_arithmetic_v<T>>>
   explicit Value(T value) {
     if constexpr (std::is_same_v<T, std::nullptr_t> ||
+                  std::is_same_v<T, UtfString> ||
                   std::is_same_v<T, std::shared_ptr<FileObject>> ||
                   std::is_same_v<T, bool>) {
       value_ = value;
@@ -106,22 +111,29 @@ class Value sealed {
   bool is_null() const {
     return value_.index() == 0;
   }
+  bool is_bool() const {
+    return value_.index() == 1;
+  }
   bool is_number() const {
     return value_.index() > 1 && value_.index() < 5;
   }
-  bool is_object() const {
+  bool is_string() const {
     return value_.index() == 5;
+  }
+  bool is_object() const {
+    return value_.index() == 6;
   }
 
   bool as_bool() const;
   uint64_t as_unsigned() const;
   int64_t as_signed() const;
   double as_double() const;
+  UtfString as_string() const;
   std::shared_ptr<FileObject> as_object() const;
 
  private:
   // Order and types must match ValueType enum.
-  std::variant<std::nullptr_t, bool, uint64_t, int64_t, double,
+  std::variant<std::nullptr_t, bool, uint64_t, int64_t, double, UtfString,
                std::shared_ptr<FileObject>>
       value_;
 };

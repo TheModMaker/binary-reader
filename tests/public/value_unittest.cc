@@ -36,6 +36,8 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 0.0);
   EXPECT_EQ(v.as_unsigned(), 0ull);
   EXPECT_EQ(v.as_signed(), 0ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "null");
 
   v = false;
   ASSERT_EQ(v.value_type(), ValueType::Boolean);
@@ -45,6 +47,8 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 0.0);
   EXPECT_EQ(v.as_unsigned(), 0ull);
   EXPECT_EQ(v.as_signed(), 0ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "false");
 
   v = true;
   ASSERT_EQ(v.value_type(), ValueType::Boolean);
@@ -54,6 +58,8 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 1.0);
   EXPECT_EQ(v.as_unsigned(), 1ull);
   EXPECT_EQ(v.as_signed(), 1ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "true");
 
   v = 15ull;
   ASSERT_EQ(v.value_type(), ValueType::UnsignedInt);
@@ -63,6 +69,8 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 15.0);
   EXPECT_EQ(v.as_unsigned(), 15ull);
   EXPECT_EQ(v.as_signed(), 15ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "15");
 
   v = 23ll;
   ASSERT_EQ(v.value_type(), ValueType::SignedInt);
@@ -72,6 +80,8 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 23.0);
   EXPECT_EQ(v.as_unsigned(), 23ull);
   EXPECT_EQ(v.as_signed(), 23ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "23");
 
   v = 4.9;
   ASSERT_EQ(v.value_type(), ValueType::Double);
@@ -81,6 +91,19 @@ TEST(ValueTest, BasicFlow) {
   EXPECT_EQ(v.as_double(), 4.9);
   EXPECT_EQ(v.as_unsigned(), 4ull);
   EXPECT_EQ(v.as_signed(), 4ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  // Don't test as_string() for double since it can have unspecified output.
+
+  v = UtfString::FromUtf8("foo");
+  ASSERT_EQ(v.value_type(), ValueType::String);
+  EXPECT_FALSE(v.is_null());
+  EXPECT_FALSE(v.is_number());
+  EXPECT_TRUE(v.as_bool());
+  EXPECT_EQ(v.as_double(), 0);
+  EXPECT_EQ(v.as_unsigned(), 0ull);
+  EXPECT_EQ(v.as_signed(), 0ll);
+  EXPECT_EQ(v.as_object(), nullptr);
+  EXPECT_EQ(v.as_string().AsUtf8(), "foo");
 }
 
 TEST(ValueTest, ClampsConversions) {
@@ -150,6 +173,14 @@ TEST(ValueTest, Equals) {
   EXPECT_FALSE(Value{true} == Value{false});
   EXPECT_FALSE(Value{nullptr} == Value{false});
   EXPECT_FALSE(Value{true} == Value{12.0});
+
+  EXPECT_TRUE(Value{UtfString::FromUtf8("foo")} ==
+              Value{UtfString::FromUtf8("foo")});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("foo")} ==
+               Value{UtfString::FromUtf8("bar")});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("true")} == Value{true});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("true")} == Value{1});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("1")} == Value{1});
 }
 
 TEST(ValueTest, LessThan) {
@@ -160,9 +191,16 @@ TEST(ValueTest, LessThan) {
   EXPECT_TRUE(Value{false} < Value{true});
   EXPECT_TRUE(Value{true} < Value{9.0});
   EXPECT_TRUE(Value{2.0} < Value{3.0});
+  EXPECT_TRUE(Value{1.0} < Value{UtfString::FromUtf8("foo")});
   EXPECT_FALSE(Value{false} < Value{nullptr});
   EXPECT_FALSE(Value{false} < Value{false});
   EXPECT_FALSE(Value{1.0} < Value{false});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("foo")} < Value{1.0});
+
+  EXPECT_TRUE(Value{UtfString::FromUtf8("a")} <
+              Value{UtfString::FromUtf8("b")});
+  EXPECT_FALSE(Value{UtfString::FromUtf8("b")} <
+               Value{UtfString::FromUtf8("a")});
 
   EXPECT_TRUE(Value{8ull} < Value{45ull});
   EXPECT_TRUE(Value{8ull} < Value{45ll});

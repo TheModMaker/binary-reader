@@ -69,6 +69,14 @@ class Codec {
   virtual std::shared_ptr<TextConverter> CreateCoder() = 0;
 };
 
+/// <summary>
+/// This holds a map of codec name to Codec object.  The default implementation
+/// is just an empty collection that can have Codec objects added to it.  This
+/// can also be subclassed to provide dynamic behavior (e.g. creating Codec
+/// objects based on the input).
+///
+/// To access the default codecs, use the CreateDefaultCollection method.
+/// </summary>
 class CodecCollection {
  public:
   CodecCollection() {}
@@ -98,6 +106,9 @@ class CodecCollection {
 
   /// <summary>
   /// Creates a new CodecCollection that is populated with the default codecs.
+  /// The caller can replace specific Codec instances by using AddCodec.
+  /// Doing this will only affect that exact codec name; if that codec has an
+  /// alias, this will still return the old Codec instance.
   /// </summary>
   static std::shared_ptr<CodecCollection> CreateDefaultCollection();
 

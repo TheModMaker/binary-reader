@@ -14,6 +14,8 @@
 
 #include "binary_reader/utf_string.h"
 
+#include "binary_reader/codecs.h"
+
 namespace binary_reader {
 
 UtfString::UtfString() = default;
@@ -42,12 +44,26 @@ UtfString UtfString::FromEncoding(const char* bytes, size_t size,
                       error);
 }
 
+UtfString UtfString::FromUtf8(const std::string& str) {
+  ErrorInfo error;
+  return FromEncoding(
+      str.data(), str.size(),
+      CodecCollection::CreateDefaultCollection()->GetCodec("utf8"), &error);
+}
+
 std::vector<uint8_t> UtfString::AsBytes(std::shared_ptr<Codec> codec,
                                         ErrorInfo* error) const {
   std::vector<uint8_t> ret;
   auto coder = codec->CreateCoder();
   (void)coder->Encode(utf16_buffer_.data(), utf16_buffer_.size(), &ret, error);
   return ret;
+}
+
+std::string UtfString::AsUtf8() const {
+  ErrorInfo error;
+  auto vec = AsBytes(
+      CodecCollection::CreateDefaultCollection()->GetCodec("utf8"), &error);
+  return std::string{vec.begin(), vec.end()};
 }
 
 }  // namespace binary_reader

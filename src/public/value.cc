@@ -28,7 +28,9 @@ T cast_variant_number(const Variant& value) {
   switch (static_cast<ValueType>(value.index())) {
     default:
     case ValueType::Null:
+    case ValueType::String:
     case ValueType::Object:
+      // TODO: Add string to number parsing
       return 0;
     case ValueType::Boolean:
       return std::get<bool>(value) ? 1 : 0;
@@ -63,6 +65,8 @@ bool Value::as_bool() const {
       return std::get<int64_t>(value_) != 0;
     case ValueType::Double:
       return std::get<double>(value_) != 0;
+    case ValueType::String:
+      return !std::get<UtfString>(value_).empty();
     case ValueType::Object:
       return true;
   }
@@ -78,6 +82,26 @@ int64_t Value::as_signed() const {
 
 double Value::as_double() const {
   return cast_variant_number<double>(value_);
+}
+
+UtfString Value::as_string() const {
+  switch (value_type()) {
+    default:
+    case ValueType::Null:
+      return UtfString::FromUtf8("null");
+    case ValueType::Boolean:
+      return UtfString::FromUtf8(std::get<bool>(value_) ? "true" : "false");
+    case ValueType::UnsignedInt:
+      return UtfString::FromUtf8(std::to_string(std::get<uint64_t>(value_)));
+    case ValueType::SignedInt:
+      return UtfString::FromUtf8(std::to_string(std::get<int64_t>(value_)));
+    case ValueType::Double:
+      return UtfString::FromUtf8(std::to_string(std::get<double>(value_)));
+    case ValueType::String:
+      return std::get<UtfString>(value_);
+    case ValueType::Object:
+      return UtfString::FromUtf8("<object>");
+  }
 }
 
 std::shared_ptr<FileObject> Value::as_object() const {
@@ -124,7 +148,7 @@ bool Value::operator==(const Value& other) const {
 }
 
 bool Value::operator<(const Value& other) const {
-  // null < bool < numbers < objects
+  // null < bool < numbers < strings < objects
   const auto other_type = other.value_type();
   switch (value_type()) {
     default:
@@ -146,7 +170,8 @@ bool Value::operator<(const Value& other) const {
         return static_cast<double>(std::get<uint64_t>(value_)) <
                std::get<double>(other.value_);
       } else {
-        return other_type == ValueType::Object;
+        return other_type != ValueType::Null &&
+               other_type != ValueType::Boolean;
       }
     case ValueType::SignedInt:
       if (other_type == ValueType::UnsignedInt) {
@@ -159,7 +184,8 @@ bool Value::operator<(const Value& other) const {
         return static_cast<double>(std::get<int64_t>(value_)) <
                std::get<double>(other.value_);
       } else {
-        return other_type == ValueType::Object;
+        return other_type != ValueType::Null &&
+               other_type != ValueType::Boolean;
       }
     case ValueType::Double:
       if (other_type == ValueType::UnsignedInt) {
@@ -170,6 +196,13 @@ bool Value::operator<(const Value& other) const {
                static_cast<double>(std::get<int64_t>(other.value_));
       } else if (other_type == ValueType::Double) {
         return std::get<double>(value_) < std::get<double>(other.value_);
+      } else {
+        return other_type != ValueType::Null &&
+               other_type != ValueType::Boolean;
+      }
+    case ValueType::String:
+      if (other_type == ValueType::String) {
+        return std::get<UtfString>(value_) < std::get<UtfString>(other.value_);
       } else {
         return other_type == ValueType::Object;
       }
