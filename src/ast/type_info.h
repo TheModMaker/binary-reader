@@ -37,8 +37,8 @@ class TypeInfoBase {
   NON_COPYABLE_OR_MOVABLE_TYPE(TypeInfoBase);
 
  public:
-  TypeInfoBase(const std::string& alias_name, const std::string& base_name,
-               std::optional<Size> static_size);
+  TypeInfoBase(const DebugInfo& debug, const std::string& alias_name,
+               const std::string& base_name, std::optional<Size> static_size);
   virtual ~TypeInfoBase();
 
   static std::vector<std::shared_ptr<TypeInfoBase>> GetBuiltInTypes();
@@ -52,6 +52,18 @@ class TypeInfoBase {
   std::optional<Size> static_size() const {
     return static_size_;
   }
+
+  const DebugInfo& debug_info() const {
+    return debug_;
+  }
+
+  /// <summary>
+  /// Clones the current instance with some values changed.
+  /// </summary>
+  /// <param name="debug">The new debug info.</param>
+  /// <returns>A new instance, or nullptr on error.</returns>
+  virtual std::shared_ptr<TypeInfoBase> WithDebugInfo(
+      const DebugInfo& debug) const = 0;
 
   virtual bool equals(const TypeInfoBase& other) const;
   bool operator==(const TypeInfoBase& other) const {
@@ -78,6 +90,7 @@ class TypeInfoBase {
   const std::string alias_name_;
   const std::string base_name_;
   const std::optional<Size> static_size_;
+  const DebugInfo debug_;
 };
 
 /// <summary>
@@ -87,8 +100,8 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
   NON_COPYABLE_OR_MOVABLE_TYPE(IntegerTypeInfo);
 
  public:
-  IntegerTypeInfo(const std::string& alias_name, Size size, Signedness sign,
-                  ByteOrder order);
+  IntegerTypeInfo(const DebugInfo& debug, const std::string& alias_name,
+                  Size size, Signedness sign, ByteOrder order);
 
   Signedness signedness() const {
     return sign_;
@@ -97,6 +110,8 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
     return order_;
   }
 
+  std::shared_ptr<TypeInfoBase> WithDebugInfo(
+      const DebugInfo& debug) const override;
   bool equals(const TypeInfoBase& other) const override;
 
   bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,

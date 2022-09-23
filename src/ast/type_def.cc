@@ -55,9 +55,9 @@ bool FieldInfo::equals(const Statement& other) const {
 }
 
 TypeDefinition::TypeDefinition(
-    const std::string& name,
+    const DebugInfo& debug, const std::string& name,
     std::vector<std::shared_ptr<Statement>> statements)
-    : TypeInfoBase(name, name, CalculateSize(statements)),
+    : TypeInfoBase(debug, name, name, CalculateSize(statements)),
       statements_(std::move(statements)) {}
 
 bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
@@ -72,6 +72,11 @@ bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
     return false;
   *result = ret;
   return reader->Seek(init.start_position + *static_size(), errors);
+}
+
+std::shared_ptr<TypeInfoBase> TypeDefinition::WithDebugInfo(
+    const DebugInfo& debug) const {
+  return std::make_shared<TypeDefinition>(debug, alias_name(), statements_);
 }
 
 bool TypeDefinition::equals(const TypeInfoBase& other) const {

@@ -26,11 +26,27 @@ enum class ErrorLevel {
   Info,
 };
 
-struct ErrorInfo sealed {
+struct DebugInfo sealed {
   /// <summary>
-  /// The file path to the file that contains the error.
+  /// The file path to the file this info refers to.
   /// </summary>
   std::string file_path;
+
+  /// <summary>
+  /// The (one based) line number within the definition file this refers to.
+  /// </summary>
+  size_t line = 0;
+  /// <summary>
+  /// The (one based) column number within the definition file this refers to.
+  /// </summary>
+  size_t column = 0;
+};
+
+struct ErrorInfo sealed {
+  /// <summary>
+  /// The debug info describing where the error happened.
+  /// </summary>
+  DebugInfo debug;
   /// <summary>
   /// The error message.
   /// </summary>
@@ -39,25 +55,11 @@ struct ErrorInfo sealed {
   /// The level of error this is.
   /// </summary>
   ErrorLevel level = ErrorLevel::Error;
-
   /// <summary>
   /// For binary files, this is the byte offset for where the error starts.
-  /// For definition files, this is the character offset.
   /// For other errors, this will be 0.
   /// </summary>
   uint64_t offset = 0;
-  /// <summary>
-  /// For definition files, this is the (one based) line number for where the
-  /// error starts.
-  /// For other errors, this will be 0.
-  /// </summary>
-  size_t line = 0;
-  /// <summary>
-  /// For definition files, this is the (one based) column number for where the
-  /// error starts.
-  /// For other errors, this will be 0.
-  /// </summary>
-  size_t column = 0;
 };
 
 std::ostream& operator<<(std::ostream& os, ErrorLevel level);

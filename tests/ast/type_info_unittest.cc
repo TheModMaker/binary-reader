@@ -48,7 +48,7 @@ std::shared_ptr<BufferedFileReader> MakeReader(
 TEST(IntegerTypeInfoTest, ReadValue_UnsignedInt) {
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo integer("", Size::FromBits(32), Signedness::Unsigned,
+  IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_TRUE(integer.ReadValue(
       MakeReader({0x11, 0x22, 0x33, 0x44, 0x55, 0x66}), &result, &errors));
@@ -59,14 +59,14 @@ TEST(IntegerTypeInfoTest, ReadValue_LargeUnaligned) {
   constexpr const uint8_t kOffset = 4;
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo int32("", Size::FromBits(32), Signedness::Unsigned,
+  IntegerTypeInfo int32({}, "", Size::FromBits(32), Signedness::Unsigned,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(
       int32.ReadValue(MakeReader({0x12, 0x34, 0x56, 0x78, 0x90, 0x12}, kOffset),
                       &result, &errors));
   ASSERT_EQ(result, Value{0x23456789u});
 
-  IntegerTypeInfo int64("", Size::FromBits(64), Signedness::Unsigned,
+  IntegerTypeInfo int64({}, "", Size::FromBits(64), Signedness::Unsigned,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(int64.ReadValue(
       MakeReader({0x12, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x45},
@@ -79,7 +79,7 @@ TEST(IntegerTypeInfoTest, ReadValue_SmallUnaligned) {
   constexpr const uint8_t kOffset = 1;
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo integer("", Size::FromBits(5), Signedness::Unsigned,
+  IntegerTypeInfo integer({}, "", Size::FromBits(5), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   // 0110 1011
   ASSERT_TRUE(integer.ReadValue(MakeReader({0x6b}, kOffset), &result, &errors));
@@ -89,7 +89,7 @@ TEST(IntegerTypeInfoTest, ReadValue_SmallUnaligned) {
 TEST(IntegerTypeInfoTest, ReadValue_SignedInt) {
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo integer("", Size::FromBits(32), Signedness::Signed,
+  IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Signed,
                           ByteOrder::BigEndian);
   ASSERT_TRUE(integer.ReadValue(
       MakeReader({0x11, 0x22, 0x33, 0x44, 0x55, 0x66}), &result, &errors));
@@ -99,17 +99,17 @@ TEST(IntegerTypeInfoTest, ReadValue_SignedInt) {
 TEST(IntegerTypeInfoTest, ReadValue_Negative) {
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo int16("", Size::FromBits(16), Signedness::Signed,
+  IntegerTypeInfo int16({}, "", Size::FromBits(16), Signedness::Signed,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(int16.ReadValue(MakeReader({0xff, 0xcd, 0x0}), &result, &errors));
   ASSERT_EQ(result, Value{-51});
-  IntegerTypeInfo int64("", Size::FromBits(64), Signedness::Signed,
+  IntegerTypeInfo int64({}, "", Size::FromBits(64), Signedness::Signed,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(int64.ReadValue(
       MakeReader({0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xcd, 0x0}),
       &result, &errors));
   ASSERT_EQ(result, Value{-51});
-  IntegerTypeInfo int_little("", Size::FromBits(16), Signedness::Signed,
+  IntegerTypeInfo int_little({}, "", Size::FromBits(16), Signedness::Signed,
                              ByteOrder::LittleEndian);
   ASSERT_TRUE(
       int_little.ReadValue(MakeReader({0xcd, 0xff, 0x0}), &result, &errors));
@@ -119,7 +119,7 @@ TEST(IntegerTypeInfoTest, ReadValue_Negative) {
 TEST(IntegerTypeInfoTest, ReadValue_Eof) {
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo integer("", Size::FromBits(32), Signedness::Unsigned,
+  IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_FALSE(integer.ReadValue(
       MakeReader({0x11, 0x22}, /* bits= */ 0, /* eof= */ true), &result,
@@ -130,7 +130,7 @@ TEST(IntegerTypeInfoTest, ReadValue_EofUnaligned) {
   constexpr const uint8_t kOffset = 3;
   Value result;
   ErrorCollection errors("");
-  IntegerTypeInfo integer("", Size::FromBits(32), Signedness::Unsigned,
+  IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_FALSE(integer.ReadValue(
       MakeReader({0x11, 0x22, 0x33, 0x44}, kOffset, /* eof= */ true), &result,

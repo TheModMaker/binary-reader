@@ -18,20 +18,23 @@
 
 namespace binary_reader {
 
-TypeInfoBase::TypeInfoBase(const std::string& alias_name,
+TypeInfoBase::TypeInfoBase(const DebugInfo& debug,
+                           const std::string& alias_name,
                            const std::string& base_name,
                            std::optional<Size> static_size)
     : alias_name_(alias_name),
       base_name_(base_name),
-      static_size_(static_size) {}
+      static_size_(static_size),
+      debug_(debug) {}
 
 TypeInfoBase::~TypeInfoBase() {}
 
 std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
   std::vector<std::shared_ptr<TypeInfoBase>> ret;
-#define MAKE(id, size, sign)                          \
-  ret.emplace_back(std::make_shared<IntegerTypeInfo>( \
-      (id), Size::FromBits(size), (sign), ByteOrder::Unset))
+#define MAKE(id, size, sign)                                       \
+  ret.emplace_back(std::make_shared<IntegerTypeInfo>(              \
+      DebugInfo{"<builtin>"}, (id), Size::FromBits(size), (sign),  \
+      ByteOrder::Unset))
   MAKE("byte", 8, Signedness::Unsigned);
   MAKE("sbyte", 8, Signedness::Signed);
   MAKE("int8", 8, Signedness::Signed);
@@ -58,9 +61,18 @@ bool TypeInfoBase::ReadValue(std::shared_ptr<BufferedFileReader>, Value*,
 }
 
 
-IntegerTypeInfo::IntegerTypeInfo(const std::string& alias_name, Size size,
+IntegerTypeInfo::IntegerTypeInfo(const DebugInfo& debug,
+                                 const std::string& alias_name, Size size,
                                  Signedness sign, ByteOrder order)
-    : TypeInfoBase(alias_name, "integer", size), sign_(sign), order_(order) {}
+    : TypeInfoBase(debug, alias_name, "integer", size),
+      sign_(sign),
+      order_(order) {}
+
+std::shared_ptr<TypeInfoBase> IntegerTypeInfo::WithDebugInfo(
+    const DebugInfo& debug) const {
+  return std::make_shared<IntegerTypeInfo>(debug, alias_name(), *static_size(),
+                                           signedness(), byte_order());
+}
 
 bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {
   if (auto* o = dynamic_cast<const IntegerTypeInfo*>(&other)) {

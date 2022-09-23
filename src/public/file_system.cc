@@ -55,7 +55,7 @@ class FileFileReader sealed : public FileReader {
     *size = std::fread(buffer, 1, *size, fs_);
     if (std::ferror(fs_)) {
       errors->Add(
-          {path_, "Error reading from file.  errno=" + std::to_string(errno)});
+          {{path_}, "Error reading from file.  errno=" + std::to_string(errno)});
       return false;
     }
     return true;
@@ -68,7 +68,7 @@ class FileFileReader sealed : public FileReader {
       *position = size_;
     if (fseeko(fs_, *position, SEEK_SET)) {
       errors->Add(
-          {path_, "Error seeking file.  errno=" + std::to_string(errno)});
+          {{path_}, "Error seeking file.  errno=" + std::to_string(errno)});
       return false;
     }
     return true;

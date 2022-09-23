@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ast/type_info.h"
+#include "binary_reader/error.h"
 #include "util/macros.h"
 
 namespace binary_reader {
@@ -68,7 +69,7 @@ class TypeDefinition sealed
   NON_COPYABLE_OR_MOVABLE_TYPE(TypeDefinition);
 
  public:
-  TypeDefinition(const std::string& name,
+  TypeDefinition(const DebugInfo& debug, const std::string& name,
                  std::vector<std::shared_ptr<Statement>> statements);
 
   const std::vector<std::shared_ptr<Statement>>& statements() const {
@@ -77,6 +78,9 @@ class TypeDefinition sealed
 
   bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,
                  ErrorCollection* errors) const override;
+
+  std::shared_ptr<TypeInfoBase> WithDebugInfo(
+      const DebugInfo& debug) const override;
 
  private:
   bool equals(const TypeInfoBase& other) const override;

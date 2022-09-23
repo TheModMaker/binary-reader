@@ -26,8 +26,7 @@ bool ParseSuccess(const char* val,
   ParseDefinitionFile("", val, defs, &errors);
   for (const auto& error : errors) {
     const char* levels[] = {"Error", "Warning", "Info"};
-    printf("%s(%zu): %s\n", levels[static_cast<int>(error.level)], error.line,
-           error.message.c_str());
+    std::cerr << error << "\n";
   }
   return errors.empty();
 }
@@ -53,9 +52,9 @@ std::shared_ptr<TypeDefinition> as_type_def(
   return std::dynamic_pointer_cast<TypeDefinition>(statement);
 }
 
-#define CHECK_ERROR2(error, li, c, le) \
-  EXPECT_EQ((error).line, (li));       \
-  EXPECT_EQ((error).column, (c));      \
+#define CHECK_ERROR2(error, li, c, le)   \
+  EXPECT_EQ((error).debug.line, (li));   \
+  EXPECT_EQ((error).debug.column, (c));  \
   EXPECT_EQ((error).level, (le))
 
 #define CHECK_ERROR(error, l, c) CHECK_ERROR2(error, l, c, ErrorLevel::Error)

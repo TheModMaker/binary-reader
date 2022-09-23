@@ -32,21 +32,22 @@ std::ostream& operator<<(std::ostream& os, ErrorLevel level) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ErrorInfo& error) {
-  if (error.file_path.empty()) {
+  if (error.debug.file_path.empty()) {
     // error: unknown type 'foo'
     return os << error.level << ": " << error.message;
-  } else if (!error.line) {
+  } else if (!error.debug.line) {
     // foo/bar.def: error: unknown type 'foo'
-    return os << error.file_path << ": " << error.level << ": "
+    return os << error.debug.file_path << ": " << error.level << ": "
               << error.message;
-  } else if (!error.column) {
+  } else if (!error.debug.column) {
     // foo/bar.def:6: error: unknown type 'foo'
-    return os << error.file_path << ":" << error.line << ": " << error.level
-              << ": " << error.message;
+    return os << error.debug.file_path << ":" << error.debug.line << ": "
+              << error.level << ": " << error.message;
   } else {
     // foo/bar.def:6:12: error: unknown type 'foo'
-    return os << error.file_path << ":" << error.line << ":" << error.column
-              << ": " << error.level << ": " << error.message;
+    return os << error.debug.file_path << ":" << error.debug.line << ":"
+              << error.debug.column << ": " << error.level << ": "
+              << error.message;
   }
 }
 
@@ -66,20 +67,20 @@ void ErrorCollection::Add(const ErrorInfo& info) {
 void ErrorCollection::AddError(const std::string& message, uint64_t offset,
                                size_t line, size_t column) {
   errors_.push_back(
-      {file_path_, message, ErrorLevel::Error, offset, line, column});
+      {{file_path_, line, column}, message, ErrorLevel::Error, offset});
   has_error_ = true;
 }
 
 void ErrorCollection::AddWarning(const std::string& message, uint64_t offset,
                                  size_t line, size_t column) {
   errors_.push_back(
-      {file_path_, message, ErrorLevel::Warning, offset, line, column});
+      {{file_path_, line, column}, message, ErrorLevel::Warning, offset});
 }
 
 void ErrorCollection::AddInfo(const std::string& message, uint64_t offset,
                               size_t line, size_t column) {
   errors_.push_back(
-      {file_path_, message, ErrorLevel::Info, offset, line, column});
+      {{file_path_, line, column}, message, ErrorLevel::Info, offset});
 }
 
 void ErrorCollection::AddAllFrom(const ErrorCollection& errors) {

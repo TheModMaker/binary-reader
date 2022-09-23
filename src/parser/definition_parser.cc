@@ -100,7 +100,8 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
 
     auto statements = std::move(stack_.statements_);
     stack_.statements_.clear();
-    return std::make_shared<TypeDefinition>(ctx->IDENTIFIER()->getText(),
+    return std::make_shared<TypeDefinition>(GetDebugInfo(ctx->start),
+                                            ctx->IDENTIFIER()->getText(),
                                             std::move(statements));
   }
 
@@ -119,7 +120,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     const std::string name = ctx->IDENTIFIER()->getText();
     auto type = stack_.GetType(name);
     if (type)
-      return type;
+      return type->WithDebugInfo(GetDebugInfo(ctx->start));
 
     AddError("Unknown type " + name, ctx->start);
     return std::shared_ptr<TypeInfoBase>(nullptr);
@@ -145,10 +146,14 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   /////////////////////////////////////////////////////////////////////////////
   // Utilities
 
+  DebugInfo GetDebugInfo(antlr4::Token* token) {
+    return {path_, token->getLine(), token->getCharPositionInLine()};
+  }
+
   void AddError(const std::string& message, antlr4::Token* token,
                 ErrorLevel level = ErrorLevel::Error) {
-    errors_->Add({path_, message, level, token->getStartIndex(),
-                  token->getLine(), token->getCharPositionInLine()});
+    errors_->Add(
+        {GetDebugInfo(token), message, level, token->getStartIndex()});
   }
 
   Stack stack_;

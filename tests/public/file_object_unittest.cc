@@ -24,7 +24,8 @@ namespace {
 
 std::shared_ptr<IntegerTypeInfo> MakeInt(size_t bits) {
   return std::make_shared<IntegerTypeInfo>(
-      "", Size::FromBits(bits), Signedness::Unsigned, ByteOrder::BigEndian);
+      DebugInfo{}, "", Size::FromBits(bits), Signedness::Unsigned,
+      ByteOrder::BigEndian);
 }
 
 }  // namespace
@@ -85,7 +86,7 @@ TEST_F(FileObjectTest, BasicFlow_TestMode) {
 
 TEST_F(FileObjectTest, BasicFlow_NormalMode) {
   auto def = std::make_shared<TypeDefinition>(
-      "", std::vector<std::shared_ptr<Statement>>{
+      DebugInfo{}, "", std::vector<std::shared_ptr<Statement>>{
               std::make_shared<FieldInfo>("a", MakeInt(16)),
               std::make_shared<FieldInfo>("b", MakeInt(32)),
           });
