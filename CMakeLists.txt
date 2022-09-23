@@ -96,6 +96,7 @@ add_library(base_lib STATIC
             "src/public/file_parser.cc"
             "src/public/file_system.cc"
             "src/public/json.cc"
+            "src/public/options.cc"
             "src/public/utf_string.cc"
             "src/public/value.cc"
             "src/util/buffered_file_reader.cc"

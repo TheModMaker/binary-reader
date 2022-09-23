@@ -32,6 +32,7 @@ class Codec;
 class UtfString {
  public:
   UtfString();
+  explicit UtfString(const std::u16string& str);
   ~UtfString();
   UtfString(const UtfString&);
   UtfString(UtfString&&);

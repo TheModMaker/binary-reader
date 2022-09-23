@@ -20,8 +20,8 @@
 #include <string>
 #include <vector>
 
-#include "ast/options.h"
 #include "binary_reader/error_collection.h"
+#include "binary_reader/options.h"
 #include "binary_reader/value.h"
 #include "util/buffered_file_reader.h"
 #include "util/macros.h"

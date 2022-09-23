@@ -19,6 +19,7 @@
 namespace binary_reader {
 
 UtfString::UtfString() = default;
+UtfString::UtfString(const std::u16string& str) : utf16_buffer_(str) {}
 UtfString::~UtfString() = default;
 UtfString::UtfString(const UtfString&) = default;
 UtfString::UtfString(UtfString&&) = default;
