@@ -15,8 +15,10 @@
 #ifndef BINARY_READER_INCLUDE_UTF_STRING_H_
 #define BINARY_READER_INCLUDE_UTF_STRING_H_
 
+#include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "binary_reader/error.h"
@@ -123,6 +125,15 @@ class UtfString {
   std::u16string utf16_buffer_;
 };
 
+std::ostream& operator<<(std::ostream& os, const UtfString& str);
+
 }  // namespace binary_reader
+
+template <>
+struct std::hash<binary_reader::UtfString> {
+  std::size_t operator()(const binary_reader::UtfString& str) const noexcept {
+    return std::hash<std::u16string>()(str.AsUtf16());
+  }
+};
 
 #endif  // BINARY_READER_INCLUDE_UTF_STRING_H_

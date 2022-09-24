@@ -235,7 +235,7 @@ bool Options::CheckOptionData() {
       if (!value.name)
         break;
       if (value_names.count(value.name) != 0) {
-        std::cerr << "Duplicate option value " << UtfString{value.name}.AsUtf8()
+        std::cerr << "Duplicate option value " << UtfString{value.name}
                   << " for type " << info.type << "\n";
         return false;
       }

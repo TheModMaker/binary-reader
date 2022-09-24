@@ -67,4 +67,9 @@ std::string UtfString::AsUtf8() const {
   return std::string{vec.begin(), vec.end()};
 }
 
+std::ostream& operator<<(std::ostream& os, const UtfString& str) {
+  // TODO: Investigate Unicode support on Windows.
+  return os << str.AsUtf8();
+}
+
 }  // namespace binary_reader
