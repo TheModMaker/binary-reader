@@ -68,38 +68,38 @@ const OptionTypeInfo kOptionData[] = {
 
 }  // namespace
 
-std::ostream& operator<<(std::ostream& os, OptionType opt) {
-  switch (opt) {
+std::string to_string(OptionType type) {
+  switch (type) {
     case OptionType::Unknown:
-      return os << "Unknown";
+      return "Unknown";
     case OptionType::Signedness:
-      return os << "signedness";
+      return "signedness";
     case OptionType::ByteOrder:
-      return os << "byte_order";
+      return "byte_order";
     default:
-      return os << "<Unknown OptionType>";
+      return "<Unknown OptionType>";
   }
 }
 
-std::ostream& operator<<(std::ostream& os, Signedness opt) {
-  switch (opt) {
+std::string to_string(Signedness signedness) {
+  switch (signedness) {
     case Signedness::Signed:
-      return os << "signed";
+      return "signed";
     case Signedness::Unsigned:
-      return os << "unsigned";
+      return "unsigned";
     default:
-      return os << "<Unknown Signedness>";
+      return "<Unknown Signedness>";
   }
 }
 
-std::ostream& operator<<(std::ostream& os, ByteOrder opt) {
-  switch (opt) {
+std::string to_string(ByteOrder byte_order) {
+  switch (byte_order) {
     case ByteOrder::LittleEndian:
-      return os << "little";
+      return "little";
     case ByteOrder::BigEndian:
-      return os << "big";
+      return "big";
     default:
-      return os << "<Unknown ByteOrder>";
+      return "<Unknown ByteOrder>";
   }
 }
 

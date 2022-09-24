@@ -43,9 +43,19 @@ enum class ByteOrder : uint16_t {
   BigEndian,  // aka "network"
 };
 
-std::ostream& operator<<(std::ostream& os, OptionType opt);
-std::ostream& operator<<(std::ostream& os, Signedness opt);
-std::ostream& operator<<(std::ostream& os, ByteOrder opt);
+std::string to_string(OptionType type);
+std::string to_string(Signedness signedness);
+std::string to_string(ByteOrder byte_order);
+
+inline std::ostream& operator<<(std::ostream& os, OptionType opt) {
+  return os << to_string(opt);
+}
+inline std::ostream& operator<<(std::ostream& os, Signedness opt) {
+  return os << to_string(opt);
+}
+inline std::ostream& operator<<(std::ostream& os, ByteOrder opt) {
+  return os << to_string(opt);
+}
 
 OptionType GetOptionType(const UtfString& type);
 
