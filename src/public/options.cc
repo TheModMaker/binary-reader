@@ -66,6 +66,13 @@ const OptionTypeInfo kOptionData[] = {
      }},
 };
 
+Options MakeDefault() {
+  Options opt;
+  opt.byte_order = ByteOrder::BigEndian;
+  opt.signedness = Signedness::Unsigned;
+  return opt;
+}
+
 }  // namespace
 
 std::string to_string(OptionType type) {
@@ -114,8 +121,8 @@ OptionType GetOptionType(const UtfString& type) {
 }
 
 Options::Options()
-    : signedness(Signedness::Unsigned),
-      byte_order(ByteOrder::BigEndian) {}
+    : signedness(Signedness::Unset),
+      byte_order(ByteOrder::Unset) {}
 
 Options::Options(const Options&) = default;
 Options::Options(Options&&) = default;
@@ -123,6 +130,8 @@ Options::~Options() = default;
 
 Options& Options::operator=(const Options&) = default;
 Options& Options::operator=(Options&&) = default;
+
+const Options Options::DefaultOptions = MakeDefault();
 
 Options::ParseResult Options::ParseOption(
     const std::unordered_set<OptionType>& types, const Value& value,

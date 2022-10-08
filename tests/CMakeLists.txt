@@ -16,6 +16,7 @@
 include_directories(.)
 add_executable(
     all_tests
+    "ast/option_set_unittest.cc"
     "ast/type_info_unittest.cc"
     "parser/definition_parser_unittest.cc"
     "public/codecs_unittest.cc"

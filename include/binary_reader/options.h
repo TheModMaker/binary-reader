@@ -18,6 +18,7 @@
 #include <any>
 #include <iostream>
 #include <type_traits>
+#include <unordered_map>
 #include <unordered_set>
 
 #include "binary_reader/utf_string.h"
@@ -84,6 +85,9 @@ class Options sealed {
     Ambiguous,
   };
 
+  /// <summary>
+  /// Creates a new Options object with Unset fields.
+  /// </summary>
   Options();
   Options(const Options&);
   Options(Options&&);
@@ -91,6 +95,11 @@ class Options sealed {
 
   Options& operator=(const Options&);
   Options& operator=(Options&&);
+
+  /// <summary>
+  /// Contains an Options object with the default settings.
+  /// </summary>
+  static const Options DefaultOptions;
 
   /// <summary>
   /// Parses an option value into its enum value.  If this is given |types|,
@@ -105,9 +114,42 @@ class Options sealed {
                                  const Value& value, OptionType* result_type,
                                  std::any* result);
 
+  /// <summary>
+  /// Gets the value of the given option in this object; if the option is unset,
+  /// return the option from |defaults|.
+  /// </summary>
+  /// <param name="type">The type of option to get.</param>
+  /// <returns>The option's value.</returns>
   std::any GetOption(OptionType type, const Options& defaults) const;
   std::any GetOption(OptionType type) const {
-    return GetOption(type, {});
+    return GetOption(type, Options{});
+  }
+
+  /// <summary>
+  /// Gets the option value that has the type T; if the option is unset, this
+  /// returns |default_|.  This can only be called for types T that have an
+  /// associated option and there is not more than one.
+  /// </summary>
+  /// <param name="default_">
+  /// The default value to return if the option is unset.
+  /// </param>
+  /// <returns>The option's value, or the given default.</returns>
+  template <typename T>
+  T GetOption(T default_ = default(T)) {
+    if constexpr (std::is_same<T, Signedness>::value) {
+      if (signedness == Signedness::Unset)
+        return default_;
+      else
+        return signedness;
+    } else if constexpr (std::is_same<T, ByteOrder>::value) {
+      if (byte_order == ByteOrder::Unset)
+        return default_;
+      else
+        return byte_order;
+    } else {
+      // Must depend on T to work correctly
+      static_assert(!std::is_same<T, T>::value, "Unknown option type");
+    }
   }
 
   /// <summary>
@@ -120,6 +162,8 @@ class Options sealed {
   /// <returns>Whether the option existed and was set.</returns>
   bool SetOption(OptionType type, std::any value);
 
+  //// Static general options
+
   Signedness signedness;
   ByteOrder byte_order;
 
@@ -130,8 +174,8 @@ class Options sealed {
   /// </summary>
   static bool CheckOptionData();
 
-  // For future new fields.
-  std::any impl_;
+  // New fields are added here to not break ABI.
+  std::unordered_map<OptionType, std::any> new_fields_;
 };
 
 }  // namespace binary_reader
