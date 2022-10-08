@@ -18,5 +18,9 @@ antlr_target(antlr_parser AntlrBinary.g4 PACKAGE antlr4 VISITOR)
 add_library(parser STATIC
             ${ANTLR_antlr_parser_CXX_OUTPUTS}
 )
+if(MSVC)
+  # Suppress unused parameter warning in generated code
+  target_compile_options(parser PRIVATE "/wd4100")
+endif()
 target_include_directories(parser PUBLIC ${ANTLR_antlr_parser_OUTPUT_DIR})
 target_link_libraries(parser antlr4_static)

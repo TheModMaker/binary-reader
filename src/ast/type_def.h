@@ -79,8 +79,9 @@ class TypeDefinition sealed
   bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,
                  ErrorCollection* errors) const override;
 
-  std::shared_ptr<TypeInfoBase> WithDebugInfo(
-      const DebugInfo& debug) const override;
+  std::unordered_set<OptionType> GetOptionTypes() const override;
+  std::shared_ptr<TypeInfoBase> Instantiate(
+      const DebugInfo& debug, Options options) const override;
 
  private:
   bool equals(const TypeInfoBase& other) const override;

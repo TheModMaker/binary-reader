@@ -68,10 +68,16 @@ IntegerTypeInfo::IntegerTypeInfo(const DebugInfo& debug,
       sign_(sign),
       order_(order) {}
 
-std::shared_ptr<TypeInfoBase> IntegerTypeInfo::WithDebugInfo(
-    const DebugInfo& debug) const {
-  return std::make_shared<IntegerTypeInfo>(debug, alias_name(), *static_size(),
-                                           signedness(), byte_order());
+std::unordered_set<OptionType> IntegerTypeInfo::GetOptionTypes() const {
+  return {OptionType::Signedness, OptionType::ByteOrder};
+}
+
+std::shared_ptr<TypeInfoBase> IntegerTypeInfo::Instantiate(
+    const DebugInfo& debug, Options options) const {
+  return std::make_shared<IntegerTypeInfo>(
+      debug, alias_name(), static_size().value(),
+      options.GetOption<Signedness>(signedness()),
+      options.GetOption<ByteOrder>(byte_order()));
 }
 
 bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {

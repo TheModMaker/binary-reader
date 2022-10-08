@@ -82,7 +82,7 @@ type Box<BoxType> {
 
 type FullBox<BoxType> : Box<BoxType> {
   byte version;
-  integer(unsigned, 24) flags;  // Uncommon integer size, in bits.
+  integer<24, unsigned> flags;  // Uncommon integer size, in bits.
 }
 
 type FileType : Box<'ftyp'> {

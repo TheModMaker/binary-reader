@@ -74,8 +74,12 @@ bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
   return reader->Seek(init.start_position + *static_size(), errors);
 }
 
-std::shared_ptr<TypeInfoBase> TypeDefinition::WithDebugInfo(
-    const DebugInfo& debug) const {
+std::unordered_set<OptionType> TypeDefinition::GetOptionTypes() const {
+  return {};
+}
+
+std::shared_ptr<TypeInfoBase> TypeDefinition::Instantiate(
+    const DebugInfo& debug, Options options) const  {
   return std::make_shared<TypeDefinition>(debug, alias_name(), statements_);
 }
 

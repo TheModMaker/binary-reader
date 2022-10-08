@@ -15,9 +15,11 @@
 #ifndef BINARY_READER_AST_TYPE_INFO_H_
 #define BINARY_READER_AST_TYPE_INFO_H_
 
+#include <any>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "binary_reader/error_collection.h"
@@ -58,12 +60,17 @@ class TypeInfoBase {
   }
 
   /// <summary>
+  /// Gets the possible options that can be set on the type.
+  /// </summary>
+  virtual std::unordered_set<OptionType> GetOptionTypes() const = 0;
+
+  /// <summary>
   /// Clones the current instance with some values changed.
   /// </summary>
   /// <param name="debug">The new debug info.</param>
   /// <returns>A new instance, or nullptr on error.</returns>
-  virtual std::shared_ptr<TypeInfoBase> WithDebugInfo(
-      const DebugInfo& debug) const = 0;
+  virtual std::shared_ptr<TypeInfoBase> Instantiate(const DebugInfo& debug,
+                                                    Options options) const = 0;
 
   virtual bool equals(const TypeInfoBase& other) const;
   bool operator==(const TypeInfoBase& other) const {
@@ -110,8 +117,9 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
     return order_;
   }
 
-  std::shared_ptr<TypeInfoBase> WithDebugInfo(
-      const DebugInfo& debug) const override;
+  std::unordered_set<OptionType> GetOptionTypes() const override;
+  std::shared_ptr<TypeInfoBase> Instantiate(const DebugInfo& debug,
+                                            Options options) const override;
   bool equals(const TypeInfoBase& other) const override;
 
   bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,

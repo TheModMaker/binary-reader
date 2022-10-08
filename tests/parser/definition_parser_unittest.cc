@@ -95,6 +95,24 @@ TEST(DefinitionParserTest, ParseFile_Fields) {
   CheckInteger(field->type(), "uint16", 16, Signedness::Unsigned);
 }
 
+TEST(DefinitionParserTest, ParseFile_Fields_Options) {
+  std::vector<std::shared_ptr<TypeDefinition>> defs;
+  std::shared_ptr<FieldInfo> field;
+  ASSERT_TRUE(ParseSuccess(
+      "type foo { int32<unsigned> x; uint32<signed> y; int32<little> z; }",
+      &defs));
+  ASSERT_EQ(defs.size(), 1u);
+
+  ASSERT_EQ(defs[0]->statements().size(), 3u);
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[0])));
+  CheckInteger(field->type(), "int32", 32, Signedness::Unsigned);
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[1])));
+  CheckInteger(field->type(), "uint32", 32, Signedness::Signed);
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[2])));
+  CheckInteger(field->type(), "int32", 32, Signedness::Signed,
+               ByteOrder::LittleEndian);
+}
+
 TEST(DefinitionParserTest, ParseFile_CantUseRecursiveTypes) {
   std::vector<std::shared_ptr<TypeDefinition>> defs;
   std::shared_ptr<FieldInfo> field;

@@ -16,9 +16,12 @@
 
 #include <antlr4-runtime.h>
 
+#include <utility>
+
 #include "AntlrBinaryLexer.h"
 #include "AntlrBinaryParser.h"
 #include "AntlrBinaryVisitor.h"
+#include "ast/option_set.h"
 #include "util/macros.h"
 
 namespace binary_reader {
@@ -115,16 +118,54 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   /////////////////////////////////////////////////////////////////////////////
   // Types
 
+  antlrcpp::Any visitOption(
+      antlr4::AntlrBinaryParser::OptionContext* ctx) override {
+    OptionType type = OptionType::Unknown;
+    if (ctx->name) {
+      type = GetOptionType(UtfString::FromUtf8(ctx->name->getText()));
+      if (type == OptionType::Unknown) {
+        AddError("Unknown option '" + ctx->name->getText() + "'", ctx->start);
+      }
+    }
+    return std::make_tuple(GetDebugInfo(ctx->start), type,
+                           UtfString::FromUtf8(ctx->expr->getText()));
+  }
+
+  antlrcpp::Any visitOptionList(
+      antlr4::AntlrBinaryParser::OptionListContext* ctx) override {
+    std::shared_ptr<OptionSet> options =
+        ctx->optionList()
+            ? visit(ctx->optionList()).as<std::shared_ptr<OptionSet>>()
+            : std::make_shared<OptionSet>();
+    auto tuple = visit(ctx->option())
+                     .as<std::tuple<DebugInfo, OptionType, UtfString>>();
+    options->AddStatic(std::get<0>(tuple), std::get<1>(tuple),
+                       std::get<2>(tuple), errors_);
+    return options;
+  }
+
   antlrcpp::Any visitCompleteType(
       antlr4::AntlrBinaryParser::CompleteTypeContext* ctx) override {
     const std::string name = ctx->IDENTIFIER()->getText();
-    auto type = stack_.GetType(name);
-    if (type)
-      return type->WithDebugInfo(GetDebugInfo(ctx->start));
+    auto ret = stack_.GetType(name);
+    if (!ret) {
+      AddError("Unknown type " + name, ctx->start);
+      return ret;
+    }
 
-    AddError("Unknown type " + name, ctx->start);
-    return std::shared_ptr<TypeInfoBase>(nullptr);
+    Options options;
+    if (ctx->optionList()) {
+      auto valid_options = ret->GetOptionTypes();
+      auto set = visit(ctx->optionList()).as<std::shared_ptr<OptionSet>>();
+      set->BuildStaticOptions(valid_options, &options, errors_);
+    }
+    ret = ret->Instantiate(GetDebugInfo(ctx->start), options);
+    if (!ret) {
+      AddError("Error setting options on type", ctx->start);
+    }
+    return ret;
   }
+
 
   /////////////////////////////////////////////////////////////////////////////
   // Forwards/misc

@@ -46,4 +46,9 @@ typeMember : dataField ;
 dataField : completeType IDENTIFIER ';' ;
 
 //// Types
-completeType : IDENTIFIER ;
+option : name=IDENTIFIER '=' expr=IDENTIFIER
+       | expr=IDENTIFIER ;
+optionList : optionList ',' option
+           | option ;
+completeType : IDENTIFIER '<' optionList '>'
+             | IDENTIFIER ;
