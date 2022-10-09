@@ -76,10 +76,6 @@ class Options sealed {
     /// </summary>
     UnknownString,
     /// <summary>
-    /// The value was a bool and none of the types allow bool.
-    /// </summary>
-    NoBool,
-    /// <summary>
     /// There are two or more types that have to this value.
     /// </summary>
     Ambiguous,

@@ -20,12 +20,6 @@ namespace binary_reader {
 
 namespace {
 
-enum class BoolValue {
-  None,
-  False,
-  True,
-};
-
 template <typename T>
 std::any Cast(uint16_t val) {
   return static_cast<T>(val);
@@ -39,8 +33,6 @@ struct OptionValue {
 struct OptionTypeInfo {
   OptionType type;
   std::any (*cast)(uint16_t);
-  uint16_t false_value;
-  uint16_t true_value;
   OptionValue values[8];
 };
 static_assert(std::is_pod_v<OptionTypeInfo>, "Option data should be POD");
@@ -49,22 +41,19 @@ static_assert(std::is_pod_v<OptionTypeInfo>, "Option data should be POD");
 const OptionTypeInfo kOptionData[] = {
     {OptionType::Signedness,
      &Cast<Signedness>,
-     C(Signedness::Unsigned),
-     C(Signedness::Signed),
      {
          {u"signed", C(Signedness::Signed)},
          {u"unsigned", C(Signedness::Unsigned)},
      }},
     {OptionType::ByteOrder,
      &Cast<ByteOrder>,
-     0,
-     0,
      {
          {u"big", C(ByteOrder::BigEndian)},
          {u"network", C(ByteOrder::BigEndian)},
          {u"little", C(ByteOrder::LittleEndian)},
      }},
 };
+#undef C
 
 Options MakeDefault() {
   Options opt;
@@ -136,8 +125,7 @@ const Options Options::DefaultOptions = MakeDefault();
 Options::ParseResult Options::ParseOption(
     const std::unordered_set<OptionType>& types, const Value& value,
     OptionType* result_type, std::any* result) {
-  const bool is_bool = value.value_type() == ValueType::Boolean;
-  if (!is_bool && !value.is_string())
+  if (!value.is_string())
     return ParseResult::InvalidValueType;
 
   bool found = false;
@@ -145,39 +133,22 @@ Options::ParseResult Options::ParseOption(
     if (!types.empty() && types.count(type_info.type) == 0)
       continue;
 
-#define SET_VAL(v)                 \
-  if (found)                       \
-    return ParseResult::Ambiguous; \
-  *result = type_info.cast(v);     \
-  *result_type = type_info.type;   \
-  found = true
-
-    if (is_bool && type_info.false_value) {
-      SET_VAL(value.as_bool() ? type_info.true_value : type_info.false_value);
-    } else {
-      if (value.as_string().AsUtf16() == u"true" && type_info.true_value) {
-        SET_VAL(type_info.true_value);
-      } else if (value.as_string().AsUtf16() == u"false" &&
-                 type_info.true_value) {
-        SET_VAL(type_info.false_value);
-      } else {
-        for (const auto& value_info : type_info.values) {
-          if (!value_info.name)
-            break;
-          if (value.as_string().AsUtf16() == value_info.name) {
-            SET_VAL(value_info.value);
-            break;
-          }
-        }
+    for (const auto& value_info : type_info.values) {
+      if (!value_info.name)
+        break;
+      if (value.as_string().AsUtf16() == value_info.name) {
+        if (found)
+          return ParseResult::Ambiguous;
+        *result_type = type_info.type;
+        *result = type_info.cast(value_info.value);
+        found = true;
+        break;
       }
     }
-#undef SET_VAL
   }
 
   if (found)
     return ParseResult::Success;
-  if (is_bool)
-    return ParseResult::NoBool;
   return ParseResult::UnknownString;
 }
 
@@ -227,15 +198,6 @@ bool Options::CheckOptionData() {
       return false;
     }
     types.emplace(info.type);
-    if ((info.false_value == 0) != (info.true_value == 0)) {
-      std::cerr << "Inconsistent true/false values for type " << info.type
-                << "\n";
-      return false;
-    }
-    if (info.false_value != 0 && info.false_value == info.true_value) {
-      std::cerr << "true/false values same for type " << info.type << "\n";
-      return false;
-    }
 
     // Don't allow duplicate names within a type, but names can be ambiguous
     // between types.

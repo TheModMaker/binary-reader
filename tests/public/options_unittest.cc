@@ -65,41 +65,15 @@ TEST_F(OptionsTest, ParseOption_Filter) {
             Options::ParseResult::UnknownString);
 }
 
-TEST_F(OptionsTest, ParseOption_BoolSuccess) {
-  OptionType type;
-  std::any result;
-  ASSERT_EQ(Options::ParseOption({OptionType::Signedness}, Value{true}, &type,
-                                 &result),
-            Options::ParseResult::Success);
-  EXPECT_EQ(type, OptionType::Signedness);
-  EXPECT_EQ(std::any_cast<Signedness>(result), Signedness::Signed);
-
-  ASSERT_EQ(Options::ParseOption({OptionType::Signedness}, Value{false}, &type,
-                                 &result),
-            Options::ParseResult::Success);
-  EXPECT_EQ(type, OptionType::Signedness);
-  EXPECT_EQ(std::any_cast<Signedness>(result), Signedness::Unsigned);
-}
-
-TEST_F(OptionsTest, ParseOption_BoolStr) {
-  OptionType type;
-  std::any result;
-  ASSERT_EQ(Options::ParseOption({OptionType::Signedness}, MakeVal("true"),
-                                 &type, &result),
-            Options::ParseResult::Success);
-  EXPECT_EQ(type, OptionType::Signedness);
-  EXPECT_EQ(std::any_cast<Signedness>(result), Signedness::Signed);
-}
-
 TEST_F(OptionsTest, ParseOption_BoolFail) {
   OptionType type;
   std::any result;
   ASSERT_EQ(Options::ParseOption({OptionType::ByteOrder}, Value{true}, &type,
                                  &result),
-            Options::ParseResult::NoBool);
+            Options::ParseResult::InvalidValueType);
   ASSERT_EQ(Options::ParseOption({OptionType::ByteOrder}, Value{false}, &type,
                                  &result),
-            Options::ParseResult::NoBool);
+            Options::ParseResult::InvalidValueType);
 }
 
 }  // namespace binary_reader

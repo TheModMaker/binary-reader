@@ -44,9 +44,6 @@ bool AddOption(OptionType type, const Value value, const DebugInfo& debug,
       errors->Add({debug, "Unknown option value '" +
                               value.as_string().AsUtf8() + "'" + suffix});
       return false;
-    case Options::ParseResult::NoBool:
-      errors->Add({debug, "Option cannot be set to boolean " + suffix});
-      return false;
     case Options::ParseResult::Ambiguous:
       errors->Add({debug, "Ambiguous option value '" +
                               value.as_string().AsUtf8() + "'" + suffix});
