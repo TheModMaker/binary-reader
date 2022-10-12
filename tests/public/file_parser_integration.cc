@@ -73,8 +73,8 @@ type Main {
   ASSERT_TRUE(main);
   Value a = main->GetFieldValue("a");
   Value c = main->GetFieldValue("c");
-  ASSERT_TRUE(a.is_object());
-  ASSERT_TRUE(c.is_object());
+  ASSERT_EQ(a.value_type(), ValueType::Object);
+  ASSERT_EQ(c.value_type(), ValueType::Object);
 
   EXPECT_EQ(a.as_object()->GetFieldValue("x"), Value{0x11});
   EXPECT_EQ(a.as_object()->GetFieldValue("y"), Value{0x2233});

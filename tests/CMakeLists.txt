@@ -24,8 +24,8 @@ add_executable(
     "public/file_parser_integration.cc"
     "public/file_system_unittest.cc"
     "public/json_unittest.cc"
+    "public/number_unittest.cc"
     "public/options_unittest.cc"
-    "public/value_unittest.cc"
     "util/buffered_file_reader_unittest.cc"
     "util/templates_unittest.cc"
 )

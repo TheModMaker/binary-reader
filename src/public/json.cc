@@ -39,17 +39,11 @@ void DumpJsonValue(std::ostream& os, const JsonOptions& opts, Value obj,
     case ValueType::Null:
       os << "null";
       break;
-    case ValueType::Boolean:
-      os << (obj.as_bool() ? "true" : "false");
+    case ValueType::Number:
+      os << obj.as_number();
       break;
-    case ValueType::UnsignedInt:
-      os << obj.as_unsigned();
-      break;
-    case ValueType::SignedInt:
-      os << obj.as_signed();
-      break;
-    case ValueType::Double:
-      os << obj.as_double();
+    case ValueType::String:
+      os << "\"" << obj.as_string() << "\"";
       break;
     case ValueType::Object:
       DumpJsonObject(os, opts, obj.as_object(), indent);

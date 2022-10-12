@@ -57,8 +57,6 @@ TEST(JsonTest, NoFields) {
 TEST(JsonTest, Primitives) {
   auto tests = {
       std::make_pair(Value{}, "null"),
-      std::make_pair(Value{true}, "true"),
-      std::make_pair(Value{false}, "false"),
       std::make_pair(Value{123ull}, "123"),
       std::make_pair(Value{77ll}, "77"),
       std::make_pair(Value{-45ll}, "-45"),

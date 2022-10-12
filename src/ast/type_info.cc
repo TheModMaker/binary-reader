@@ -141,9 +141,9 @@ bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,
     // so the value is still negative.
     if (size != 64)
       value |= ~((1ull << size) - 1);
-    *result = static_cast<int64_t>(value);
+    *result = Number{static_cast<int64_t>(value)};
   } else {
-    *result = value;
+    *result = Number{value};
   }
   return reader->Skip(Size::FromBits(size), errors);
 }

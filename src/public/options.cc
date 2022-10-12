@@ -125,7 +125,7 @@ const Options Options::DefaultOptions = MakeDefault();
 Options::ParseResult Options::ParseOption(
     const std::unordered_set<OptionType>& types, const Value& value,
     OptionType* result_type, std::any* result) {
-  if (!value.is_string())
+  if (value.value_type() != ValueType::String)
     return ParseResult::InvalidValueType;
 
   bool found = false;

@@ -14,202 +14,29 @@
 
 #include "binary_reader/value.h"
 
-#include <algorithm>
-#include <limits>
-
-#include "util/templates.h"
-
 namespace binary_reader {
 
-namespace {
-
-template <typename T, typename Variant>
-T cast_variant_number(const Variant& value) {
-  switch (static_cast<ValueType>(value.index())) {
-    default:
+std::ostream& operator<<(std::ostream& os, ValueType value) {
+  switch (value) {
     case ValueType::Null:
+      return os << "Null";
+    case ValueType::Number:
+      return os << "Number";
     case ValueType::String:
+      return os << "String";
     case ValueType::Object:
-      // TODO: Add string to number parsing
-      return 0;
-    case ValueType::Boolean:
-      return std::get<bool>(value) ? 1 : 0;
-    case ValueType::UnsignedInt:
-      return clamp_cast<T>(std::get<uint64_t>(value));
-    case ValueType::SignedInt:
-      return clamp_cast<T>(std::get<int64_t>(value));
-    case ValueType::Double:
-      return clamp_cast<T>(std::get<double>(value));
+      return os << "Object";
+    default:
+      return os << "<UNKNOWN ValueType>";
   }
 }
 
-}  // namespace
-
+Value::Value() {}
 Value::Value(const Value&) = default;
 Value::Value(Value&&) = default;
 Value::~Value() = default;
 
 Value& Value::operator=(const Value&) = default;
 Value& Value::operator=(Value&&) = default;
-
-bool Value::as_bool() const {
-  switch (value_type()) {
-    default:
-    case ValueType::Null:
-      return false;
-    case ValueType::Boolean:
-      return std::get<bool>(value_);
-    case ValueType::UnsignedInt:
-      return std::get<uint64_t>(value_) != 0;
-    case ValueType::SignedInt:
-      return std::get<int64_t>(value_) != 0;
-    case ValueType::Double:
-      return std::get<double>(value_) != 0;
-    case ValueType::String:
-      return !std::get<UtfString>(value_).empty();
-    case ValueType::Object:
-      return true;
-  }
-}
-
-uint64_t Value::as_unsigned() const {
-  return cast_variant_number<uint64_t>(value_);
-}
-
-int64_t Value::as_signed() const {
-  return cast_variant_number<int64_t>(value_);
-}
-
-double Value::as_double() const {
-  return cast_variant_number<double>(value_);
-}
-
-UtfString Value::as_string() const {
-  switch (value_type()) {
-    default:
-    case ValueType::Null:
-      return UtfString::FromUtf8("null");
-    case ValueType::Boolean:
-      return UtfString::FromUtf8(std::get<bool>(value_) ? "true" : "false");
-    case ValueType::UnsignedInt:
-      return UtfString::FromUtf8(std::to_string(std::get<uint64_t>(value_)));
-    case ValueType::SignedInt:
-      return UtfString::FromUtf8(std::to_string(std::get<int64_t>(value_)));
-    case ValueType::Double:
-      return UtfString::FromUtf8(std::to_string(std::get<double>(value_)));
-    case ValueType::String:
-      return std::get<UtfString>(value_);
-    case ValueType::Object:
-      return UtfString::FromUtf8("<object>");
-  }
-}
-
-std::shared_ptr<FileObject> Value::as_object() const {
-  if (!is_object())
-    return nullptr;
-  return std::get<std::shared_ptr<FileObject>>(value_);
-}
-
-bool Value::operator==(const Value& other) const {
-  const auto this_type = value_type();
-  const auto other_type = other.value_type();
-  if (this_type == ValueType::UnsignedInt) {
-    if (other_type == ValueType::UnsignedInt) {
-      return std::get<uint64_t>(value_) == std::get<uint64_t>(other.value_);
-    } else if (other_type == ValueType::SignedInt) {
-      return std::get<int64_t>(other.value_) >= 0 &&
-             std::get<uint64_t>(value_) ==
-                 static_cast<uint64_t>(std::get<int64_t>(other.value_));
-    } else if (other_type == ValueType::Double) {
-      return std::get<uint64_t>(value_) == std::get<double>(other.value_);
-    }
-  } else if (this_type == ValueType::SignedInt) {
-    if (other_type == ValueType::UnsignedInt) {
-      return std::get<int64_t>(value_) >= 0 &&
-             static_cast<uint64_t>(std::get<int64_t>(value_)) ==
-                 std::get<uint64_t>(other.value_);
-    } else if (other_type == ValueType::SignedInt) {
-      return std::get<int64_t>(value_) == std::get<int64_t>(other.value_);
-    } else if (other_type == ValueType::Double) {
-      return std::get<int64_t>(value_) == std::get<double>(other.value_);
-    }
-  } else if (this_type == ValueType::Double) {
-    if (other_type == ValueType::UnsignedInt) {
-      return std::get<double>(value_) == std::get<uint64_t>(other.value_);
-    } else if (other_type == ValueType::SignedInt) {
-      return std::get<double>(value_) == std::get<int64_t>(other.value_);
-    } else if (other_type == ValueType::Double) {
-      return std::get<double>(value_) == std::get<double>(other.value_);
-    }
-  }
-
-  // TODO: Add comparing objects.
-  return value_ == other.value_;
-}
-
-bool Value::operator<(const Value& other) const {
-  // null < bool < numbers < strings < objects
-  const auto other_type = other.value_type();
-  switch (value_type()) {
-    default:
-    case ValueType::Null:
-      return other_type != ValueType::Null;
-    case ValueType::Boolean:
-      if (other_type == ValueType::Boolean)
-        return std::get<bool>(value_) < std::get<bool>(other.value_);
-      else
-        return other_type != ValueType::Null;
-    case ValueType::UnsignedInt:
-      if (other_type == ValueType::UnsignedInt) {
-        return std::get<uint64_t>(value_) < std::get<uint64_t>(other.value_);
-      } else if (other_type == ValueType::SignedInt) {
-        return std::get<int64_t>(other.value_) >= 0 &&
-               std::get<uint64_t>(value_) <
-                   static_cast<uint64_t>(std::get<int64_t>(other.value_));
-      } else if (other_type == ValueType::Double) {
-        return static_cast<double>(std::get<uint64_t>(value_)) <
-               std::get<double>(other.value_);
-      } else {
-        return other_type != ValueType::Null &&
-               other_type != ValueType::Boolean;
-      }
-    case ValueType::SignedInt:
-      if (other_type == ValueType::UnsignedInt) {
-        return std::get<int64_t>(value_) < 0 ||
-               static_cast<uint64_t>(std::get<int64_t>(value_)) <
-                   std::get<uint64_t>(other.value_);
-      } else if (other_type == ValueType::SignedInt) {
-        return std::get<int64_t>(value_) < std::get<int64_t>(other.value_);
-      } else if (other_type == ValueType::Double) {
-        return static_cast<double>(std::get<int64_t>(value_)) <
-               std::get<double>(other.value_);
-      } else {
-        return other_type != ValueType::Null &&
-               other_type != ValueType::Boolean;
-      }
-    case ValueType::Double:
-      if (other_type == ValueType::UnsignedInt) {
-        return std::get<double>(value_) <
-               static_cast<double>(std::get<uint64_t>(other.value_));
-      } else if (other_type == ValueType::SignedInt) {
-        return std::get<double>(value_) <
-               static_cast<double>(std::get<int64_t>(other.value_));
-      } else if (other_type == ValueType::Double) {
-        return std::get<double>(value_) < std::get<double>(other.value_);
-      } else {
-        return other_type != ValueType::Null &&
-               other_type != ValueType::Boolean;
-      }
-    case ValueType::String:
-      if (other_type == ValueType::String) {
-        return std::get<UtfString>(value_) < std::get<UtfString>(other.value_);
-      } else {
-        return other_type == ValueType::Object;
-      }
-    case ValueType::Object:
-      // TODO: Add comparing objects.
-      return false;
-  }
-}
 
 }  // namespace binary_reader

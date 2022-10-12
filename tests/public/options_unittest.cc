@@ -65,15 +65,4 @@ TEST_F(OptionsTest, ParseOption_Filter) {
             Options::ParseResult::UnknownString);
 }
 
-TEST_F(OptionsTest, ParseOption_BoolFail) {
-  OptionType type;
-  std::any result;
-  ASSERT_EQ(Options::ParseOption({OptionType::ByteOrder}, Value{true}, &type,
-                                 &result),
-            Options::ParseResult::InvalidValueType);
-  ASSERT_EQ(Options::ParseOption({OptionType::ByteOrder}, Value{false}, &type,
-                                 &result),
-            Options::ParseResult::InvalidValueType);
-}
-
 }  // namespace binary_reader
