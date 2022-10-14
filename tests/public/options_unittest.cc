@@ -14,6 +14,7 @@
 
 #include "binary_reader/options.h"
 
+#include "binary_reader/value.h"
 #include "gtest_wrapper.h"
 
 namespace binary_reader {

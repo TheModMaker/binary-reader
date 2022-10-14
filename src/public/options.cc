@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include "binary_reader/value.h"
+
 namespace binary_reader {
 
 namespace {

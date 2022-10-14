@@ -31,7 +31,7 @@ class Codec;
 /// Defines a Unicode-aware string type that supports converting between
 /// different character encodings.
 /// </summary>
-class UtfString {
+class UtfString sealed {
  public:
   UtfString();
   explicit UtfString(const std::u16string& str);

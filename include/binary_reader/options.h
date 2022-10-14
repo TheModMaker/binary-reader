@@ -22,9 +22,10 @@
 #include <unordered_set>
 
 #include "binary_reader/utf_string.h"
-#include "binary_reader/value.h"
 
 namespace binary_reader {
+
+class Value;
 
 enum class OptionType : uint16_t {
   Unknown = 0,

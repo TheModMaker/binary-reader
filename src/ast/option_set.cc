@@ -14,11 +14,13 @@
 
 #include "option_set.h"
 
+#include "binary_reader/value.h"
+
 namespace binary_reader {
 
 namespace {
 
-bool AddOption(OptionType type, const Value value, const DebugInfo& debug,
+bool AddOption(OptionType type, const Value& value, const DebugInfo& debug,
                const std::unordered_set<OptionType>& valid_options,
                Options* options, ErrorCollection* errors) {
   const std::string suffix = type == OptionType::Unknown
