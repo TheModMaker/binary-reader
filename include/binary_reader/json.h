@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory>
 
+#include "binary_reader/cloneable_unique_ptr.h"
 #include "binary_reader/file_object.h"
 #include "binary_reader/value.h"
 
@@ -47,7 +48,7 @@ class JsonOptions {
   // For forward-compatibility, this allows us to add new fields without
   // breaking ABI (through member functions).
   struct Impl;
-  std::unique_ptr<Impl> impl_;
+  cloneable_unique_ptr<Impl> impl_;
 };
 
 void DumpJsonValue(std::ostream& os, const JsonOptions& opts, Value obj,

@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "binary_reader/cloneable_unique_ptr.h"
 #include "binary_reader/utf_string.h"
 
 namespace binary_reader {
@@ -172,7 +173,8 @@ class Options sealed {
   static bool CheckOptionData();
 
   // New fields are added here to not break ABI.
-  std::unordered_map<OptionType, std::any> new_fields_;
+  struct Impl;
+  cloneable_unique_ptr<Impl> impl_;
 };
 
 }  // namespace binary_reader

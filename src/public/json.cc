@@ -20,18 +20,10 @@ struct JsonOptions::Impl {};
 
 JsonOptions::JsonOptions() = default;
 JsonOptions::~JsonOptions() = default;
+JsonOptions::JsonOptions(const JsonOptions& other) = default;
 JsonOptions::JsonOptions(JsonOptions&&) = default;
+JsonOptions& JsonOptions::operator=(const JsonOptions& other) = default;
 JsonOptions& JsonOptions::operator=(JsonOptions&&) = default;
-
-// Need to explicitly list every field since std::unique_ptr isn't copyable.
-JsonOptions::JsonOptions(const JsonOptions& other)
-    : pretty(other.pretty), indent(other.indent) {}
-
-JsonOptions& JsonOptions::operator=(const JsonOptions& other) {
-  JsonOptions cp{other};
-  std::swap(*this, cp);
-  return *this;
-}
 
 void DumpJsonValue(std::ostream& os, const JsonOptions& opts, Value obj,
                    size_t indent) {

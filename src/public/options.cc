@@ -111,9 +111,12 @@ OptionType GetOptionType(const UtfString& type) {
   }
 }
 
+struct Options::Impl {};
+
 Options::Options()
     : signedness(Signedness::Unset),
-      byte_order(ByteOrder::Unset) {}
+      byte_order(ByteOrder::Unset),
+      impl_(new Impl) {}
 
 Options::Options(const Options&) = default;
 Options::Options(Options&&) = default;
