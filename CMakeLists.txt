@@ -87,8 +87,9 @@ include_directories(src)
 add_subdirectory(src/parser)
 
 add_library(base_lib STATIC
+            "src/ast/field_info.cc"
             "src/ast/option_set.cc"
-            "src/ast/type_def.cc"
+            "src/ast/type_definition.cc"
             "src/ast/type_info.cc"
             "src/parser/definition_parser.cc"
             "src/public/codecs.cc"

@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "ast/type_def.h"
+#include "ast/type_definition.h"
 #include "binary_reader/file_object.h"
 #include "binary_reader/file_system.h"
 #include "binary_reader/value.h"

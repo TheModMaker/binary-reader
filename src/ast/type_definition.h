@@ -12,62 +12,33 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#ifndef BINARY_READER_AST_TYPE_DEF_H_
-#define BINARY_READER_AST_TYPE_DEF_H_
+#ifndef BINARY_READER_AST_TYPE_DEFINITION_H_
+#define BINARY_READER_AST_TYPE_DEFINITION_H_
 
 #include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
 
+#include "ast/ast_base.h"
 #include "ast/type_info.h"
 #include "binary_reader/error.h"
 #include "util/macros.h"
 
 namespace binary_reader {
 
-class Statement {
-  NON_COPYABLE_OR_MOVABLE_TYPE(Statement);
-
- public:
-  Statement();
-  virtual ~Statement();
-
-  virtual bool equals(const Statement& other) const = 0;
-  bool operator==(const Statement& other) const {
-    return equals(other);
-  }
-  bool operator!=(const Statement& other) const {
-    return !equals(other);
-  }
-};
-
-class FieldInfo sealed : public Statement {
-  NON_COPYABLE_OR_MOVABLE_TYPE(FieldInfo);
-
- public:
-  FieldInfo(const std::string& name, std::shared_ptr<TypeInfoBase> type);
-
-  const std::string& name() const {
-    return name_;
-  }
-  std::shared_ptr<TypeInfoBase> type() const {
-    return type_;
-  }
-
- private:
-  bool equals(const Statement& other) const override;
-
-  const std::string name_;
-  const std::shared_ptr<TypeInfoBase> type_;
-};
-
+/// <summary>
+/// Defines a type definition.
+/// </summary>
+/// <example>
+/// type Example {
+///   ...
+/// }
+/// </example>
 class TypeDefinition sealed
     : public TypeInfoBase,
       public Statement,
       public std::enable_shared_from_this<TypeDefinition> {
-  NON_COPYABLE_OR_MOVABLE_TYPE(TypeDefinition);
-
  public:
   TypeDefinition(const DebugInfo& debug, const std::string& name,
                  std::vector<std::shared_ptr<Statement>> statements);
@@ -84,13 +55,13 @@ class TypeDefinition sealed
       const DebugInfo& debug, Options options) const override;
 
  private:
-  bool equals(const TypeInfoBase& other) const override;
-  bool equals(const Statement& other) const override;
-  bool equals(const TypeDefinition* other) const;
+  bool Equals(const TypeInfoBase& other) const override;
+  bool Equals(const AstBase& other) const override;
+  bool Equals(const TypeDefinition& other) const;
 
   const std::vector<std::shared_ptr<Statement>> statements_;
 };
 
 }  // namespace binary_reader
 
-#endif  // BINARY_READER_AST_TYPE_DEF_H_
+#endif  // BINARY_READER_AST_TYPE_DEFINITION_H_

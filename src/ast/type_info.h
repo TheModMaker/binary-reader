@@ -72,18 +72,21 @@ class TypeInfoBase {
   virtual std::shared_ptr<TypeInfoBase> Instantiate(const DebugInfo& debug,
                                                     Options options) const = 0;
 
-  virtual bool equals(const TypeInfoBase& other) const;
   bool operator==(const TypeInfoBase& other) const {
-    return equals(other);
+    if (this == &other)
+      return true;
+    // Can only compare objects of the same type.
+    if (typeid(*this) != typeid(other))
+      return false;
+    return Equals(other);
   }
   bool operator!=(const TypeInfoBase& other) const {
-    return !equals(other);
+    return !(*this == other);
   }
 
   /// <summary>
   /// Reads a value from the given reader.  This moves the reader forward based
-  /// on how large this type is.  The base implementation only returns an
-  /// error.
+  /// on how large this type is.
   /// </summary>
   /// <param name="reader">The object to read from</param>
   /// <param name="bit_offset">The offset within the byte to start at.</param>
@@ -92,6 +95,9 @@ class TypeInfoBase {
   /// <returns>True on success, false on error.</returns>
   virtual bool ReadValue(std::shared_ptr<BufferedFileReader> reader,
                          Value* result, ErrorCollection* errors) const = 0;
+
+ protected:
+  virtual bool Equals(const TypeInfoBase& other) const;
 
  private:
   const std::string alias_name_;
@@ -104,8 +110,6 @@ class TypeInfoBase {
 /// Defines a type info about a built-in integer type.
 /// </summary>
 class IntegerTypeInfo sealed : public TypeInfoBase {
-  NON_COPYABLE_OR_MOVABLE_TYPE(IntegerTypeInfo);
-
  public:
   IntegerTypeInfo(const DebugInfo& debug, const std::string& alias_name,
                   Size size, Signedness sign, ByteOrder order);
@@ -120,12 +124,13 @@ class IntegerTypeInfo sealed : public TypeInfoBase {
   std::unordered_set<OptionType> GetOptionTypes() const override;
   std::shared_ptr<TypeInfoBase> Instantiate(const DebugInfo& debug,
                                             Options options) const override;
-  bool equals(const TypeInfoBase& other) const override;
 
   bool ReadValue(std::shared_ptr<BufferedFileReader> reader, Value* result,
                  ErrorCollection* errors) const override;
 
  private:
+  bool Equals(const TypeInfoBase& other) const override;
+
   const Signedness sign_;
   const ByteOrder order_;
 };

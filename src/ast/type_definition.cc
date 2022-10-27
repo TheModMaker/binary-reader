@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#include "ast/type_def.h"
+#include "ast/type_definition.h"
 
 #include <cassert>
 
+#include "ast/field_info.h"
 #include "binary_reader/file_object.h"
 #include "public/file_object_init.h"
 
@@ -40,24 +41,11 @@ std::optional<Size> CalculateSize(
 
 }  // namespace
 
-Statement::Statement() {}
-Statement::~Statement() {}
-
-FieldInfo::FieldInfo(const std::string& name,
-                     std::shared_ptr<TypeInfoBase> type)
-    : name_(name), type_(type) {}
-
-bool FieldInfo::equals(const Statement& other) const {
-  if (auto* o = dynamic_cast<const FieldInfo*>(&other)) {
-    return name_ == o->name_ && *type_ == *o->type_;
-  }
-  return false;
-}
-
 TypeDefinition::TypeDefinition(
     const DebugInfo& debug, const std::string& name,
     std::vector<std::shared_ptr<Statement>> statements)
     : TypeInfoBase(debug, name, name, CalculateSize(statements)),
+      Statement(debug),
       statements_(std::move(statements)) {}
 
 bool TypeDefinition::ReadValue(std::shared_ptr<BufferedFileReader> reader,
@@ -83,27 +71,21 @@ std::shared_ptr<TypeInfoBase> TypeDefinition::Instantiate(
   return std::make_shared<TypeDefinition>(debug, alias_name(), statements_);
 }
 
-bool TypeDefinition::equals(const TypeInfoBase& other) const {
-  if (auto* o = dynamic_cast<const TypeDefinition*>(&other)) {
-    return equals(o);
-  }
-  return false;
+bool TypeDefinition::Equals(const TypeInfoBase& other) const {
+  return Equals(static_cast<const TypeDefinition&>(other));
 }
 
-bool TypeDefinition::equals(const Statement& other) const {
-  if (auto* o = dynamic_cast<const TypeDefinition*>(&other)) {
-    return equals(o);
-  }
-  return false;
+bool TypeDefinition::Equals(const AstBase& other) const {
+  return Equals(static_cast<const TypeDefinition&>(other));
 }
 
-bool TypeDefinition::equals(const TypeDefinition* other) const {
-  if (!TypeInfoBase::equals(*other) ||
-      statements_.size() != other->statements_.size()) {
+bool TypeDefinition::Equals(const TypeDefinition& other) const {
+  if (!TypeInfoBase::Equals(other) ||
+      statements_.size() != other.statements_.size()) {
     return false;
   }
   for (size_t i = 0; i < statements_.size(); i++) {
-    if (*statements_[i] != *other->statements_[i])
+    if (*statements_[i] != *other.statements_[i])
       return false;
   }
   return true;

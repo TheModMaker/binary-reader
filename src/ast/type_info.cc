@@ -49,7 +49,7 @@ std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
   return ret;
 }
 
-bool TypeInfoBase::equals(const TypeInfoBase& other) const {
+bool TypeInfoBase::Equals(const TypeInfoBase& other) const {
   return alias_name_ == other.alias_name_ && base_name_ == other.base_name_ &&
          static_size_ == other.static_size_;
 }
@@ -74,12 +74,10 @@ std::shared_ptr<TypeInfoBase> IntegerTypeInfo::Instantiate(
       options.GetOption<ByteOrder>(byte_order()));
 }
 
-bool IntegerTypeInfo::equals(const TypeInfoBase& other) const {
-  if (auto* o = dynamic_cast<const IntegerTypeInfo*>(&other)) {
-    return sign_ == o->sign_ && order_ == o->order_ &&
-           TypeInfoBase::equals(other);
-  }
-  return false;
+bool IntegerTypeInfo::Equals(const TypeInfoBase& other) const {
+  auto* o = static_cast<const IntegerTypeInfo*>(&other);
+  return sign_ == o->sign_ && order_ == o->order_ &&
+         TypeInfoBase::Equals(other);
 }
 
 bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,

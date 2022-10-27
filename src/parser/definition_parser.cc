@@ -21,6 +21,7 @@
 #include "AntlrBinaryLexer.h"
 #include "AntlrBinaryParser.h"
 #include "AntlrBinaryVisitor.h"
+#include "ast/field_info.h"
 #include "ast/option_set.h"
 #include "util/macros.h"
 
@@ -111,6 +112,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   antlrcpp::Any visitDataField(
       antlr4::AntlrBinaryParser::DataFieldContext* ctx) override {
     return std::make_shared<FieldInfo>(
+        GetDebugInfo(ctx->start),
         ctx->IDENTIFIER()->getText(),
         visit(ctx->completeType()).as<std::shared_ptr<TypeInfoBase>>());
   }

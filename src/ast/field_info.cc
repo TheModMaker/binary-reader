@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#ifndef BINARY_READER_PARSER_DEFINITION_PARSER_H_
-#define BINARY_READER_PARSER_DEFINITION_PARSER_H_
-
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "ast/type_definition.h"
-#include "binary_reader/error_collection.h"
+#include "ast/field_info.h"
 
 namespace binary_reader {
 
-bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
-                         std::vector<std::shared_ptr<TypeDefinition>>* defs,
-                         ErrorCollection* errors);
+FieldInfo::FieldInfo(const DebugInfo& debug, const std::string& name,
+                     std::shared_ptr<TypeInfoBase> type)
+    : Statement(debug), name_(name), type_(type) {}
+
+bool FieldInfo::Equals(const AstBase& other) const {
+  auto* o = static_cast<const FieldInfo*>(&other);
+  return name_ == o->name_ && *type_ == *o->type_;
+}
 
 }  // namespace binary_reader
-
-#endif  // BINARY_READER_PARSER_DEFINITION_PARSER_H_

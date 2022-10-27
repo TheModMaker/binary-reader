@@ -14,6 +14,7 @@
 
 #include "binary_reader/file_object.h"
 
+#include "ast/field_info.h"
 #include "gtest_wrapper.h"
 #include "mocks.h"
 #include "public/file_object_init.h"
@@ -87,8 +88,8 @@ TEST_F(FileObjectTest, BasicFlow_TestMode) {
 TEST_F(FileObjectTest, BasicFlow_NormalMode) {
   auto def = std::make_shared<TypeDefinition>(
       DebugInfo{}, "", std::vector<std::shared_ptr<Statement>>{
-              std::make_shared<FieldInfo>("a", MakeInt(16)),
-              std::make_shared<FieldInfo>("b", MakeInt(32)),
+              std::make_shared<FieldInfo>(DebugInfo{}, "a", MakeInt(16)),
+              std::make_shared<FieldInfo>(DebugInfo{}, "b", MakeInt(32)),
           });
 
   auto obj = MakeObjectFromFile(def, {0x11, 0x22, 0x55, 0x66, 0x77, 0x88});

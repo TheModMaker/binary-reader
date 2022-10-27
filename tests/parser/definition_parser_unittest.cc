@@ -14,6 +14,7 @@
 
 #include "parser/definition_parser.h"
 
+#include "ast/field_info.h"
 #include "gtest_wrapper.h"
 
 namespace binary_reader {

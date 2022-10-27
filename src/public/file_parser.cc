@@ -14,7 +14,7 @@
 
 #include "binary_reader/file_parser.h"
 
-#include "ast/type_def.h"
+#include "ast/type_definition.h"
 #include "parser/definition_parser.h"
 #include "util/buffered_file_reader.h"
 

@@ -19,6 +19,7 @@
 #include <optional>
 #include <unordered_map>
 
+#include "ast/field_info.h"
 #include "public/file_object_init.h"
 
 namespace binary_reader {
