@@ -32,7 +32,7 @@ TEST(BufferedFileReaderTest, BasicFlow) {
   BufferedFileReader reader(mock);
   const uint8_t* actual;
   size_t actual_size;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   EXPECT_EQ(reader.position(), Size::FromBits(0));
   ASSERT_TRUE(reader.GetBuffer(&actual, &actual_size, &errors));
   ASSERT_EQ(actual_size, sizeof(expected));
@@ -51,7 +51,7 @@ TEST(BufferedFileReaderTest, MultipleReads) {
   BufferedFileReader reader(mock);
   const uint8_t* actual;
   size_t actual_size;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   ASSERT_TRUE(reader.EnsureBuffer(Size::FromBytes(20), &errors));
   ASSERT_TRUE(reader.GetBuffer(&actual, &actual_size, &errors));
   ASSERT_EQ(actual_size, sizeof(expected));
@@ -68,7 +68,7 @@ TEST(BufferedFileReaderTest, BufferedSeek) {
   BufferedFileReader reader(mock);
   const uint8_t* actual;
   size_t actual_size;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   ASSERT_TRUE(reader.EnsureBuffer(Size::FromBytes(1), &errors));
   ASSERT_TRUE(reader.Seek(Size::FromBytes(kSeekPos), &errors));
   ASSERT_TRUE(reader.GetBuffer(&actual, &actual_size, &errors));
@@ -91,7 +91,7 @@ TEST(BufferedFileReaderTest, UnbufferedSeek) {
   BufferedFileReader reader(mock);
   const uint8_t* actual;
   size_t actual_size;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   ASSERT_TRUE(reader.EnsureBuffer(Size::FromBytes(1), &errors));
   ASSERT_TRUE(reader.Seek(Size::FromBytes(kSeekPos), &errors));
   ASSERT_TRUE(reader.GetBuffer(&actual, &actual_size, &errors));

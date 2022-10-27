@@ -47,7 +47,7 @@ std::shared_ptr<BufferedFileReader> MakeReader(
 
 TEST(IntegerTypeInfoTest, ReadValue_UnsignedInt) {
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_TRUE(integer.ReadValue(
@@ -58,7 +58,7 @@ TEST(IntegerTypeInfoTest, ReadValue_UnsignedInt) {
 TEST(IntegerTypeInfoTest, ReadValue_LargeUnaligned) {
   constexpr const uint8_t kOffset = 4;
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo int32({}, "", Size::FromBits(32), Signedness::Unsigned,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(
@@ -78,7 +78,7 @@ TEST(IntegerTypeInfoTest, ReadValue_LargeUnaligned) {
 TEST(IntegerTypeInfoTest, ReadValue_SmallUnaligned) {
   constexpr const uint8_t kOffset = 1;
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo integer({}, "", Size::FromBits(5), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   // 0110 1011
@@ -88,7 +88,7 @@ TEST(IntegerTypeInfoTest, ReadValue_SmallUnaligned) {
 
 TEST(IntegerTypeInfoTest, ReadValue_SignedInt) {
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Signed,
                           ByteOrder::BigEndian);
   ASSERT_TRUE(integer.ReadValue(
@@ -98,7 +98,7 @@ TEST(IntegerTypeInfoTest, ReadValue_SignedInt) {
 
 TEST(IntegerTypeInfoTest, ReadValue_Negative) {
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo int16({}, "", Size::FromBits(16), Signedness::Signed,
                         ByteOrder::BigEndian);
   ASSERT_TRUE(int16.ReadValue(MakeReader({0xff, 0xcd, 0x0}), &result, &errors));
@@ -118,7 +118,7 @@ TEST(IntegerTypeInfoTest, ReadValue_Negative) {
 
 TEST(IntegerTypeInfoTest, ReadValue_Eof) {
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_FALSE(integer.ReadValue(
@@ -129,7 +129,7 @@ TEST(IntegerTypeInfoTest, ReadValue_Eof) {
 TEST(IntegerTypeInfoTest, ReadValue_EofUnaligned) {
   constexpr const uint8_t kOffset = 3;
   Value result;
-  ErrorCollection errors("");
+  ErrorCollection errors;
   IntegerTypeInfo integer({}, "", Size::FromBits(32), Signedness::Unsigned,
                           ByteOrder::BigEndian);
   ASSERT_FALSE(integer.ReadValue(

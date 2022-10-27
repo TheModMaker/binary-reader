@@ -80,7 +80,7 @@ std::shared_ptr<FileParser> FileParser::CreateFromFile(
   auto file = opt.file_system->Open(path);
   if (!file) {
     if (errors)
-      errors->Add({{path}, "Error opening definition file"});
+      errors->Add({{path}, ErrorKind::CannotOpen, {path}});
     return nullptr;
   }
   if (!file->ReadFully(&buffer, errors)) {
@@ -144,7 +144,7 @@ std::shared_ptr<FileParser> FileParser::CreateFromDefinition(
     return nullptr;
   if (impl->definitions.empty()) {
     if (errors)
-      errors->Add({{path}, "Empty definition file", ErrorLevel::Error});
+      errors->Add({{path}, ErrorKind::NoTypes});
     return nullptr;
   }
   return std::shared_ptr<FileParser>(new FileParser(std::move(impl)),
@@ -193,7 +193,7 @@ std::shared_ptr<FileObject> FileParser::ParseFile(const std::string& path,
   auto file = options().file_system->Open(path);
   if (!file) {
     if (errors)
-      errors->Add({{path}, "Error opening binary file", ErrorLevel::Error});
+      errors->Add({{path}, ErrorKind::CannotOpen, {path}});
     return nullptr;
   }
   return ParseFile(file, path, type, errors);
@@ -233,16 +233,17 @@ std::shared_ptr<FileObject> FileParser::ParseFile(std::shared_ptr<FileReader> fi
   }
   if (!def) {
     if (errors)
-      errors->Add({{path}, "Unknown type '" + type + "'"});
+      errors->Add({{path}, ErrorKind::UnknownType, {type}});
     return nullptr;
   }
 
+  ErrorCollection temp_errors;
+  if (!errors)
+    errors = &temp_errors;
+
   Value val;
-  ErrorCollection cur_errors(path);
   auto reader = std::make_shared<BufferedFileReader>(file);
-  const bool success = def->ReadValue(reader, &val, &cur_errors);
-  if (errors)
-    errors->AddAllFrom(cur_errors);
+  const bool success = def->ReadValue(reader, &val, errors);
   return success ? val.as_object() : nullptr;
 }
 

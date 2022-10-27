@@ -191,12 +191,13 @@ bool FileObject::ReparseObject(ErrorCollection* errors) {
       impl_->field_name_map[field->name()] = impl_->parsed_fields.size() - 1;
 
       if (!field->type()->static_size().has_value()) {
-        errors->AddError("Fields must have a static size");
+        errors->Add({field->type()->debug_info(),
+                    ErrorKind::FieldsMustBeStatic});
         return false;
       }
       offset += *field->type()->static_size();
     } else {
-      errors->AddError("Unknown statement type");
+      errors->Add({{}, ErrorKind::Unknown});
       return false;
     }
   }

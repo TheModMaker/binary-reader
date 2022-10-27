@@ -15,15 +15,42 @@
 #ifndef BINARY_READER_INCLUDE_ERROR_H_
 #define BINARY_READER_INCLUDE_ERROR_H_
 
+#include <initializer_list>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 namespace binary_reader {
 
-enum class ErrorLevel {
+enum class ErrorLevel : uint8_t {
   Error,
   Warning,
   Info,
+};
+
+enum class ErrorKind : uint16_t {
+  Unknown = 0,
+  CannotOpen,
+  IoError,
+
+  ShadowingType = 6000,
+  ShadowingMember,
+  UnknownType,
+  NoTypes,
+
+  OptionMustBeString = 8000,
+  OptionMustBeStringTyped,
+  UnknownOptionValue,
+  UnknownOptionValueTyped,
+  AmbiguousOption,
+  DuplicateOption,
+  OptionInvalidForType,
+  UnknownOptionType,
+
+  UnexpectedEndOfStream = 10000,
+  LittleEndianAlign,
+
+  FieldsMustBeStatic = 12000,
 };
 
 struct DebugInfo sealed {
@@ -43,6 +70,15 @@ struct DebugInfo sealed {
 };
 
 struct ErrorInfo sealed {
+  ErrorInfo();
+  ErrorInfo(DebugInfo debug, ErrorKind kind,
+            ErrorLevel level = ErrorLevel::Error, uint64_t offset = 0);
+  ErrorInfo(DebugInfo debug, ErrorKind kind,
+            std::initializer_list<std::string_view> message_args,
+            ErrorLevel level = ErrorLevel::Error, uint64_t offset = 0);
+  ErrorInfo(DebugInfo debug, ErrorKind kind, std::string_view message,
+            ErrorLevel level = ErrorLevel::Error, uint64_t offset = 0);
+
   /// <summary>
   /// The debug info describing where the error happened.
   /// </summary>
@@ -51,6 +87,10 @@ struct ErrorInfo sealed {
   /// The error message.
   /// </summary>
   std::string message;
+  /// <summary>
+  /// The kind of error that occurred.
+  /// </summary>
+  ErrorKind kind = ErrorKind::Unknown;
   /// <summary>
   /// The level of error this is.
   /// </summary>
@@ -61,6 +101,14 @@ struct ErrorInfo sealed {
   /// </summary>
   uint64_t offset = 0;
 };
+
+/// <summary>
+/// Creates the default error message for the given error kind.  The |args|
+/// specify format arguments to the error string; any missing values will use
+/// the empty string and extras are ignored.
+/// </summary>
+std::string DefaultErrorMessage(ErrorKind kind,
+                                std::initializer_list<std::string_view> args);
 
 std::ostream& operator<<(std::ostream& os, ErrorLevel level);
 std::ostream& operator<<(std::ostream& os, const ErrorInfo& error);

@@ -92,6 +92,7 @@ add_library(base_lib STATIC
             "src/ast/type_info.cc"
             "src/parser/definition_parser.cc"
             "src/public/codecs.cc"
+            "src/public/error.cc"
             "src/public/error_collection.cc"
             "src/public/file_object.cc"
             "src/public/file_parser.cc"

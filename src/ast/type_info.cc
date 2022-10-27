@@ -31,9 +31,9 @@ TypeInfoBase::~TypeInfoBase() {}
 
 std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
   std::vector<std::shared_ptr<TypeInfoBase>> ret;
-#define MAKE(id, size, sign)                                       \
-  ret.emplace_back(std::make_shared<IntegerTypeInfo>(              \
-      DebugInfo{"<builtin>"}, (id), Size::FromBits(size), (sign),  \
+#define MAKE(id, size, sign)                                      \
+  ret.emplace_back(std::make_shared<IntegerTypeInfo>(             \
+      DebugInfo{"<builtin>"}, (id), Size::FromBits(size), (sign), \
       ByteOrder::Unset))
   MAKE("byte", 8, Signedness::Unsigned);
   MAKE("sbyte", 8, Signedness::Signed);
@@ -52,12 +52,6 @@ std::vector<std::shared_ptr<TypeInfoBase>> TypeInfoBase::GetBuiltInTypes() {
 bool TypeInfoBase::equals(const TypeInfoBase& other) const {
   return alias_name_ == other.alias_name_ && base_name_ == other.base_name_ &&
          static_size_ == other.static_size_;
-}
-
-bool TypeInfoBase::ReadValue(std::shared_ptr<BufferedFileReader>, Value*,
-                             ErrorCollection* errors) const {
-  errors->AddError("ReadValue not implemented for this type");
-  return false;
 }
 
 
@@ -96,8 +90,8 @@ bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,
   const size_t byte_count = (bit_offset + size) / 8 + (final_bits != 0 ? 1 : 0);
   if (order_ == ByteOrder::LittleEndian &&
       (bit_offset != 0 || final_bits != 0)) {
-    errors->AddError("Little endian integers must be byte aligned",
-                     reader->position().byte_count());
+    errors->Add({debug_info(), ErrorKind::LittleEndianAlign, ErrorLevel::Error,
+                 reader->position().byte_count()});
     return false;
   }
   if (!reader->EnsureBuffer(*static_size(), errors))
@@ -108,7 +102,7 @@ bool IntegerTypeInfo::ReadValue(std::shared_ptr<BufferedFileReader> reader,
   if (!reader->GetBuffer(&buffer, &buffer_size, errors))
     return false;
   if (buffer_size < byte_count) {
-    errors->AddError("Unexpected end of file");
+    errors->Add({debug_info(), ErrorKind::UnexpectedEndOfStream});
     return false;
   }
 

@@ -91,7 +91,7 @@ class TypeInfoBase {
   /// <param name="errors">Will be filled in with any errors.</param>
   /// <returns>True on success, false on error.</returns>
   virtual bool ReadValue(std::shared_ptr<BufferedFileReader> reader,
-                         Value* result, ErrorCollection* errors) const;
+                         Value* result, ErrorCollection* errors) const = 0;
 
  private:
   const std::string alias_name_;

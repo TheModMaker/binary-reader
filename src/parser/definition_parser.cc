@@ -73,7 +73,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
       auto parsed_type =
           field->accept(this).as<std::shared_ptr<TypeDefinition>>();
       if (stack_.GetType(parsed_type->alias_name())) {
-        AddError("Cannot shadow existing type " + parsed_type->alias_name(),
+        AddError(ErrorKind::ShadowingType, {parsed_type->alias_name()},
                  field->start);
       }
       stack_.types_.emplace_back(parsed_type);
@@ -91,11 +91,11 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     for (auto* field : ctx->typeMember()) {
       auto parsed_field = field->accept(this).as<std::shared_ptr<FieldInfo>>();
       if (stack_.FindMember(parsed_field->name())) {
-        AddError("Cannot shadow existing member " + parsed_field->name(),
+        AddError(ErrorKind::ShadowingMember, {parsed_field->name()},
                  field->start);
       } else if (stack_.GetType(parsed_field->name()) ||
                  parsed_field->name() == ctx->IDENTIFIER()->getText()) {
-        AddError("Shadowing type " + parsed_field->name(), field->start,
+        AddError(ErrorKind::ShadowingType, {parsed_field->name()}, field->start,
                  ErrorLevel::Warning);
       }
       stack_.statements_.push_back(parsed_field);
@@ -124,7 +124,8 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     if (ctx->name) {
       type = GetOptionType(UtfString::FromUtf8(ctx->name->getText()));
       if (type == OptionType::Unknown) {
-        AddError("Unknown option '" + ctx->name->getText() + "'", ctx->start);
+        AddError(ErrorKind::UnknownOptionType, {ctx->name->getText()},
+                 ctx->start);
       }
     }
     return std::make_tuple(GetDebugInfo(ctx->start), type,
@@ -149,7 +150,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     const std::string name = ctx->IDENTIFIER()->getText();
     auto ret = stack_.GetType(name);
     if (!ret) {
-      AddError("Unknown type " + name, ctx->start);
+      AddError(ErrorKind::UnknownType, {name}, ctx->start);
       return ret;
     }
 
@@ -161,7 +162,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     }
     ret = ret->Instantiate(GetDebugInfo(ctx->start), options);
     if (!ret) {
-      AddError("Error setting options on type", ctx->start);
+      AddError(ErrorKind::Unknown, {}, ctx->start);
     }
     return ret;
   }
@@ -191,10 +192,9 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     return {path_, token->getLine(), token->getCharPositionInLine()};
   }
 
-  void AddError(const std::string& message, antlr4::Token* token,
-                ErrorLevel level = ErrorLevel::Error) {
-    errors_->Add(
-        {GetDebugInfo(token), message, level, token->getStartIndex()});
+  void AddError(ErrorKind kind, std::initializer_list<std::string_view> args,
+                antlr4::Token* token, ErrorLevel level = ErrorLevel::Error) {
+    errors_->Add({GetDebugInfo(token), kind, std::move(args), level});
   }
 
   Stack stack_;
@@ -205,12 +205,14 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
 
 class ErrorHandler sealed : public antlr4::ANTLRErrorListener {
  public:
-  ErrorHandler(ErrorCollection* errors) : errors_(errors) {}
+  ErrorHandler(const std::string& file, ErrorCollection* errors)
+      : file_(file), errors_(errors) {}
 
   void syntaxError(antlr4::Recognizer*, antlr4::Token* token,
-                   size_t line, size_t pos, const std::string& msg,
+                   size_t line, size_t, const std::string& msg,
                    std::exception_ptr) override {
-    errors_->AddError(msg, token->getStartIndex(), line, pos);
+    errors_->Add({{file_, line, token->getStartIndex()}, ErrorKind::Unknown,
+                  msg});
   }
 
   void reportAmbiguity(antlr4::Parser*, const antlr4::dfa::DFA&, size_t, size_t,
@@ -226,6 +228,7 @@ class ErrorHandler sealed : public antlr4::ANTLRErrorListener {
                                 antlr4::atn::ATNConfigSet*) override {}
 
  private:
+  const std::string file_;
   ErrorCollection* const errors_;
 };
 
@@ -241,7 +244,7 @@ bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
     antlr4::AntlrBinaryParser parser(&tokens);
 
     // Disable default error handlers (e.g. console logging).
-    ErrorHandler error_handler(errors);
+    ErrorHandler error_handler(path, errors);
     lexer.removeErrorListeners();
     lexer.addErrorListener(&error_handler);
     parser.removeErrorListeners();
@@ -252,7 +255,7 @@ bool ParseDefinitionFile(const std::string& path, const std::string& buffer,
     return !errors->has_errors();
   } catch (antlr4::RuntimeException& e) {
     // TODO: Investigate if these ever happen.
-    errors->AddError(e.what());
+    errors->Add({{path}, ErrorKind::Unknown, {e.what()}});
     return false;
   }
 }

@@ -16,6 +16,12 @@
 
 #include "binary_reader/value.h"
 
+#ifdef _MSC_VER
+// string_view from temporary is OK since it will live until the function
+// returns
+#  pragma warning(disable:26449)
+#endif
+
 namespace binary_reader {
 
 namespace {
@@ -23,9 +29,6 @@ namespace {
 bool AddOption(OptionType type, const Value& value, const DebugInfo& debug,
                const std::unordered_set<OptionType>& valid_options,
                Options* options, ErrorCollection* errors) {
-  const std::string suffix = type == OptionType::Unknown
-                                 ? ""
-                                 : " for option '" + to_string(type) + "'";
   OptionType real_type;
   std::any real_value;
   Options::ParseResult parse_result;
@@ -39,26 +42,38 @@ bool AddOption(OptionType type, const Value& value, const DebugInfo& debug,
     case Options::ParseResult::Success:
       break;
     case Options::ParseResult::InvalidValueType:
-      errors->Add(
-          {debug, "Option values must be a string or boolean" + suffix});
+      if (type == OptionType::Unknown) {
+        errors->Add({debug, ErrorKind::OptionMustBeString});
+      } else {
+        errors->Add(
+            {debug, ErrorKind::OptionMustBeStringTyped, {to_string(type)}});
+      }
       return false;
     case Options::ParseResult::UnknownString:
-      errors->Add({debug, "Unknown option value '" +
-                              value.as_string().AsUtf8() + "'" + suffix});
+      if (type == OptionType::Unknown) {
+        errors->Add({debug,
+                     ErrorKind::UnknownOptionValue,
+                     {value.as_string().AsUtf8()}});
+      } else {
+        errors->Add({debug,
+                     ErrorKind::UnknownOptionValueTyped,
+                     {value.as_string().AsUtf8(), to_string(type)}});
+      }
       return false;
     case Options::ParseResult::Ambiguous:
-      errors->Add({debug, "Ambiguous option value '" +
-                              value.as_string().AsUtf8() + "'" + suffix});
+      // Explicit types cannot be ambiguous since there's only one type possible
+      errors->Add(
+          {debug, ErrorKind::AmbiguousOption, {value.as_string().AsUtf8()}});
       return false;
   }
   if (!valid_options.empty() && valid_options.count(real_type) == 0) {
-    errors->Add({debug, "Option '" + to_string(real_type) +
-                            "' is not valid for this type"});
+    errors->Add(
+        {debug, ErrorKind::OptionInvalidForType, {to_string(real_type)}});
     return false;
   }
 
   if (!options->SetOption(real_type, real_value)) {
-    errors->Add({debug, "Error setting option"});
+    errors->Add({debug, ErrorKind::Unknown});
     return false;
   }
   return true;
@@ -70,7 +85,7 @@ bool OptionSet::AddStatic(DebugInfo debug, OptionType type,
                           const UtfString& value, ErrorCollection* errors) {
   if (type != OptionType::Unknown) {
     if (option_types_.count(type) > 0) {
-      errors->Add({debug, "Duplicate option '" + to_string(type) + "'"});
+      errors->Add({debug, ErrorKind::DuplicateOption, {to_string(type)}});
       return false;
     }
     option_types_.emplace(type);

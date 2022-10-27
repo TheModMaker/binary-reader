@@ -15,7 +15,6 @@
 #ifndef BINARY_READER_INCLUDE_ERROR_COLLECTION_H_
 #define BINARY_READER_INCLUDE_ERROR_COLLECTION_H_
 
-#include <string>
 #include <vector>
 
 #include "binary_reader/error.h"
@@ -23,14 +22,11 @@
 namespace binary_reader {
 
 /// <summary>
-/// Holds a collection of error objects and contains utilites for adding and
-/// querying errors.  This is designed to work with a single file, and that
-/// path is copied to each error.
+/// Holds a collection of error objects.
 /// </summary>
 class ErrorCollection sealed {
  public:
   ErrorCollection();
-  ErrorCollection(const std::string& file_path);
   ErrorCollection(const ErrorCollection&) = delete;
   ErrorCollection(ErrorCollection&&) = delete;
   ~ErrorCollection();
@@ -78,17 +74,10 @@ class ErrorCollection sealed {
   }
 
   void Add(const ErrorInfo& info);
-  void AddError(const std::string& message, uint64_t offset = 0,
-                size_t line = 0, size_t column = 0);
-  void AddWarning(const std::string& message, uint64_t offset = 0,
-                  size_t line = 0, size_t column = 0);
-  void AddInfo(const std::string& message, uint64_t offset = 0, size_t line = 0,
-               size_t column = 0);
 
   void AddAllFrom(const ErrorCollection& errors);
 
  private:
-  const std::string file_path_;
   std::vector<ErrorInfo> errors_;
   bool has_error_ = false;
 };
