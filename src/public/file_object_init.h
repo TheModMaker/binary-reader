@@ -23,8 +23,8 @@
 #include "ast/type_definition.h"
 #include "binary_reader/file_object.h"
 #include "binary_reader/file_system.h"
+#include "binary_reader/size.h"
 #include "binary_reader/value.h"
-#include "util/size.h"
 
 namespace binary_reader {
 

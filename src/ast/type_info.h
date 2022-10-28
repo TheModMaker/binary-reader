@@ -24,10 +24,10 @@
 
 #include "binary_reader/error_collection.h"
 #include "binary_reader/options.h"
+#include "binary_reader/size.h"
 #include "binary_reader/value.h"
 #include "util/buffered_file_reader.h"
 #include "util/macros.h"
-#include "util/size.h"
 
 namespace binary_reader {
 

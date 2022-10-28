@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#ifndef BINARY_READER_UTIL_SIZE_H_
-#define BINARY_READER_UTIL_SIZE_H_
+#ifndef BINARY_READER_INCLUDE_SIZE_H_
+#define BINARY_READER_INCLUDE_SIZE_H_
 
 #include <cstdint>
 #include <iostream>
@@ -103,4 +103,4 @@ inline bool operator<=(const Size& a, const Size& b) {
 
 }  // namespace binary_reader
 
-#endif  // BINARY_READER_UTIL_SIZE_H_
+#endif  // BINARY_READER_INCLUDE_SIZE_H_

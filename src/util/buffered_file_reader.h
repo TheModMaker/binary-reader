@@ -19,8 +19,8 @@
 
 #include "binary_reader/error_collection.h"
 #include "binary_reader/file_system.h"
+#include "binary_reader/size.h"
 #include "util/macros.h"
-#include "util/size.h"
 
 namespace binary_reader {
 
