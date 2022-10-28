@@ -12,24 +12,16 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#include "ast/field_info.h"
+#include "ast/literal.h"
 
 namespace binary_reader {
 
-FieldInfo::FieldInfo(const DebugInfo& debug, const std::string& name,
-                     std::shared_ptr<TypeInfoBase> type,
-                     std::shared_ptr<Expression> expected)
-    : Statement(debug), name_(name), type_(type), expected_(expected) {}
+Literal::Literal(const DebugInfo& debug, Value value)
+    : Expression(debug), value_(value) {}
 
-bool FieldInfo::Equals(const AstBase& other) const {
-  auto* o = static_cast<const FieldInfo*>(&other);
-  if (expected_ && o->expected_) {
-    if (*expected_ != *o->expected_)
-      return false;
-  } else if (expected_ != o->expected_) {
-    return false;
-  }
-  return name_ == o->name_ && *type_ == *o->type_;
+bool Literal::Equals(const AstBase& other) const {
+  auto* o = static_cast<const Literal*>(&other);
+  return value_ == o->value_;
 }
 
 }  // namespace binary_reader

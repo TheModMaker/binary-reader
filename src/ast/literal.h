@@ -12,24 +12,28 @@
 // See the License for the specific language governing permissionsand
 // limitations under the License.
 
-#include "ast/field_info.h"
+#ifndef BINARY_READER_AST_EXPRESSION_H_
+#define BINARY_READER_AST_EXPRESSION_H_
+
+#include "ast/ast_base.h"
+#include "binary_reader/value.h"
 
 namespace binary_reader {
 
-FieldInfo::FieldInfo(const DebugInfo& debug, const std::string& name,
-                     std::shared_ptr<TypeInfoBase> type,
-                     std::shared_ptr<Expression> expected)
-    : Statement(debug), name_(name), type_(type), expected_(expected) {}
+class Literal sealed : public Expression {
+ public:
+  Literal(const DebugInfo& debug, Value value);
 
-bool FieldInfo::Equals(const AstBase& other) const {
-  auto* o = static_cast<const FieldInfo*>(&other);
-  if (expected_ && o->expected_) {
-    if (*expected_ != *o->expected_)
-      return false;
-  } else if (expected_ != o->expected_) {
-    return false;
+  const Value& value() const {
+    return value_;
   }
-  return name_ == o->name_ && *type_ == *o->type_;
-}
+
+ private:
+  bool Equals(const AstBase& other) const override;
+
+  const Value value_;
+};
 
 }  // namespace binary_reader
+
+#endif  // BINARY_READER_AST_EXPRESSION_H_

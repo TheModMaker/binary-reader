@@ -15,6 +15,7 @@
 #include "parser/definition_parser.h"
 
 #include <antlr4-runtime.h>
+#include <string.h>
 
 #include <utility>
 
@@ -22,6 +23,7 @@
 #include "AntlrBinaryParser.h"
 #include "AntlrBinaryVisitor.h"
 #include "ast/field_info.h"
+#include "ast/literal.h"
 #include "ast/option_set.h"
 #include "util/macros.h"
 
@@ -114,7 +116,10 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     return std::make_shared<FieldInfo>(
         GetDebugInfo(ctx->start),
         ctx->IDENTIFIER()->getText(),
-        visit(ctx->completeType()).as<std::shared_ptr<TypeInfoBase>>());
+        visit(ctx->completeType()).as<std::shared_ptr<TypeInfoBase>>(),
+        ctx->expression()
+            ? visit(ctx->expression()).as<std::shared_ptr<Expression>>()
+            : nullptr);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -166,6 +171,24 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
     if (!ret) {
       AddError(ErrorKind::Unknown, {}, ctx->start);
     }
+    return ret;
+  }
+
+  /////////////////////////////////////////////////////////////////////////////
+  // Expressions
+
+  antlrcpp::Any visitExpression(
+      antlr4::AntlrBinaryParser::ExpressionContext* ctx) override {
+    std::shared_ptr<Expression> ret;
+    const std::string value = ctx->NUMBER()->getText();
+    if (value.find_first_of(".e") != std::string::npos) {
+      ret = std::make_shared<Literal>(
+          GetDebugInfo(ctx->start), Value{std::stod(value)});
+    } else {
+      ret = std::make_shared<Literal>(
+          GetDebugInfo(ctx->start), Value{std::stoll(value, nullptr, 0)});
+    }
+
     return ret;
   }
 

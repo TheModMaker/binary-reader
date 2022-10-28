@@ -15,6 +15,7 @@
 #include "parser/definition_parser.h"
 
 #include "ast/field_info.h"
+#include "ast/literal.h"
 #include "gtest_wrapper.h"
 
 namespace binary_reader {
@@ -46,6 +47,10 @@ void CheckInteger(std::shared_ptr<TypeInfoBase> info, const std::string& alias,
 
 std::shared_ptr<FieldInfo> as_field(std::shared_ptr<Statement> statement) {
   return std::dynamic_pointer_cast<FieldInfo>(statement);
+}
+
+std::shared_ptr<Literal> as_literal(std::shared_ptr<Expression> exp) {
+  return std::dynamic_pointer_cast<Literal>(exp);
 }
 
 std::shared_ptr<TypeDefinition> as_type_def(
@@ -112,6 +117,26 @@ TEST(DefinitionParserTest, ParseFile_Fields_Options) {
   ASSERT_TRUE((field = as_field(defs[0]->statements()[2])));
   CheckInteger(field->type(), "int32", 32, Signedness::Signed,
                ByteOrder::LittleEndian);
+}
+
+TEST(DefinitionParserTest, ParseFile_Fields_Expected) {
+  std::vector<std::shared_ptr<TypeDefinition>> defs;
+  std::shared_ptr<FieldInfo> field;
+  std::shared_ptr<Literal> literal;
+  ASSERT_TRUE(ParseSuccess(
+      "type foo { int32 x = 12; int32 y = 0x45; int32 z = 2.4; }", &defs));
+  ASSERT_EQ(defs.size(), 1u);
+
+  ASSERT_EQ(defs[0]->statements().size(), 3u);
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[0])));
+  ASSERT_TRUE((literal = as_literal(field->expected())));
+  EXPECT_EQ(literal->value(), Value{12});
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[1])));
+  ASSERT_TRUE((literal = as_literal(field->expected())));
+  EXPECT_EQ(literal->value(), Value{0x45});
+  ASSERT_TRUE((field = as_field(defs[0]->statements()[2])));
+  ASSERT_TRUE((literal = as_literal(field->expected())));
+  EXPECT_EQ(literal->value(), Value{2.4});
 }
 
 TEST(DefinitionParserTest, ParseFile_CantUseRecursiveTypes) {

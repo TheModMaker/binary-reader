@@ -62,6 +62,10 @@ class Statement : public AstBase {
   using AstBase::AstBase;
 };
 
+class Expression : public AstBase {
+  using AstBase::AstBase;
+};
+
 }  // namespace binary_reader
 
 #endif  // BINARY_READER_AST_AST_BASE_H_

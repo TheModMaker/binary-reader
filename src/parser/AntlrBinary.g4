@@ -25,7 +25,8 @@ LONG_COMMENT : '/*' .*? '*/' -> skip ;
 TYPE : 'type' ;
 
 fragment DIGIT : [\p{Numeric_Type=Decimal}] ;
-NUMBER : DIGIT* '.' DIGIT+ ('e' [-+]? DIGIT+)?
+NUMBER : '0' [xX] DIGIT+
+       | DIGIT* '.' DIGIT+ ('e' [-+]? DIGIT+)?
        | DIGIT+ ('.' DIGIT*)? ('e' [-+]? DIGIT+)? ;
 IDENTIFIER : '$'? [\p{ID_Start}] [\p{ID_Continue}]* ;
 
@@ -43,7 +44,7 @@ empty : ;
 typeDefinition : TYPE IDENTIFIER '{' typeMember* '}' ;
 typeMember : dataField ;
 
-dataField : completeType IDENTIFIER ';' ;
+dataField : completeType IDENTIFIER ('=' expression)? ';' ;
 
 //// Types
 option : name=IDENTIFIER '=' expr=IDENTIFIER
@@ -52,3 +53,6 @@ optionList : optionList ',' option
            | option ;
 completeType : IDENTIFIER '<' optionList '>'
              | IDENTIFIER ;
+
+//// Expressions
+expression : NUMBER ;

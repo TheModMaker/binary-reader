@@ -88,6 +88,7 @@ add_subdirectory(src/parser)
 
 add_library(base_lib STATIC
             "src/ast/field_info.cc"
+            "src/ast/literal.cc"
             "src/ast/option_set.cc"
             "src/ast/type_definition.cc"
             "src/ast/type_info.cc"

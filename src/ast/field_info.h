@@ -32,7 +32,8 @@ namespace binary_reader {
 class FieldInfo sealed : public Statement {
  public:
   FieldInfo(const DebugInfo& debug, const std::string& name,
-            std::shared_ptr<TypeInfoBase> type);
+            std::shared_ptr<TypeInfoBase> type,
+            std::shared_ptr<Expression> expected = nullptr);
 
   const std::string& name() const {
     return name_;
@@ -42,11 +43,16 @@ class FieldInfo sealed : public Statement {
     return type_;
   }
 
+  std::shared_ptr<Expression> expected() const {
+    return expected_;
+  }
+
  private:
   bool Equals(const AstBase& other) const override;
 
   const std::string name_;
   const std::shared_ptr<TypeInfoBase> type_;
+  const std::shared_ptr<Expression> expected_;
 };
 
 }  // namespace binary_reader
