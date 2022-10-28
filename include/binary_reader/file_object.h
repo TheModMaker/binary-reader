@@ -17,7 +17,7 @@
 
 #include <memory>
 #include <string>
-#include <utility>
+#include <vector>
 
 #include "binary_reader/error_collection.h"
 #include "binary_reader/value.h"
@@ -35,63 +35,18 @@ struct FileObjectInit;
 /// Instances of this type can only be created by the file parser and not by the
 /// app.  Instance lifetime is controlled through a std::shared_ptr.
 ///
-/// This type is iterable, and iterates over the fields in the object.
-/// The order of elements is the order that they appear in the file definition.
-/// The iterator's value is a pair of string field name and the Value.
-///
 /// This lazy-loads the fields in the object.  The field is only parsed when
 /// requesting the field's value.  The cached values can be cleared to reduce
 /// memory usage.
 /// </summary>
 class FileObject sealed {
  public:
-  class const_iterator sealed {
-   public:
-    using iterator_category = std::input_iterator_tag;
-    using value_type = std::pair<std::string, Value>;
-    using difference_type = ptrdiff_t;
-    using pointer = const std::pair<std::string, Value>*;
-    using reference = const std::pair<std::string, Value>&;
-
-    const_iterator();
-    const_iterator(const const_iterator&);
-    const_iterator(const_iterator&&);
-    ~const_iterator();
-    const_iterator& operator=(const const_iterator&);
-    const_iterator& operator=(const_iterator&&);
-
-    reference operator*() const;
-    pointer operator->() const;
-    const_iterator& operator++();
-    const_iterator operator++(int);
-    bool operator==(const const_iterator& other) const;
-    bool operator!=(const const_iterator& other) const;
-
-   private:
-    struct IteratorState;
-    friend FileObject;
-    explicit const_iterator(std::unique_ptr<IteratorState> state);
-
-    void FillValue();
-
-    std::unique_ptr<IteratorState> impl_;
-  };
-  using iterator = const_iterator;
-
   FileObject(const FileObject&) = delete;
   FileObject(FileObject&&) = delete;
   FileObject& operator=(const FileObject&) = delete;
   FileObject& operator=(FileObject&&) = delete;
 
-  const_iterator begin() const;
-  const_iterator end() const;
-
-  /// <summary>
-  /// Returns an iterator to the field with the given name, or end() if the
-  /// given field doesn't exist.
-  /// </summary>
-  /// <param name="name">The name of the field.</param>
-  const_iterator find(const std::string& name) const;
+  std::vector<std::string> GetFieldNames() const;
 
   /// <summary>
   /// Returns whether the given field exists within the object.  This return

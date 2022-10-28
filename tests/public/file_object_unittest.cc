@@ -69,20 +69,6 @@ TEST_F(FileObjectTest, BasicFlow_TestMode) {
   EXPECT_FALSE(obj->HasField("bar"));
   EXPECT_EQ(obj->GetFieldValue("foo"), Value{1});
   EXPECT_EQ(obj->GetFieldValue("bar"), Value{});
-
-  EXPECT_NE(obj->begin(), obj->end());
-  size_t i = 0;
-  for (auto it = obj->begin(); it != obj->end(); it++, i++) {
-    ASSERT_EQ(i, 0u);
-    ASSERT_EQ(it->first, "foo");
-    ASSERT_EQ(it->second, Value{1});
-  }
-
-  auto it2 = obj->find("foo");
-  ASSERT_NE(it2, obj->end());
-  EXPECT_EQ(it2->first, "foo");
-  EXPECT_EQ(it2->second, Value{1});
-  EXPECT_EQ(obj->find("c"), obj->end());
 }
 
 TEST_F(FileObjectTest, BasicFlow_NormalMode) {
@@ -100,26 +86,6 @@ TEST_F(FileObjectTest, BasicFlow_NormalMode) {
   EXPECT_EQ(obj->GetFieldValue("a"), Value{0x1122});
   EXPECT_EQ(obj->GetFieldValue("b"), Value{0x55667788});
   EXPECT_EQ(obj->GetFieldValue("c"), Value{});
-
-  EXPECT_NE(obj->begin(), obj->end());
-  size_t i = 0;
-  for (auto it = obj->begin(); it != obj->end(); it++, i++) {
-    if (i == 0) {
-      EXPECT_EQ(it->first, "a");
-      EXPECT_EQ(it->second, Value{0x1122});
-    } else if (i == 1) {
-      EXPECT_EQ(it->first, "b");
-      EXPECT_EQ(it->second, Value{0x55667788});
-    } else {
-      FAIL();
-    }
-  }
-
-  auto it2 = obj->find("a");
-  ASSERT_NE(it2, obj->end());
-  EXPECT_EQ(it2->first, "a");
-  EXPECT_EQ(it2->second, Value{0x1122});
-  EXPECT_EQ(obj->find("c"), obj->end());
 }
 
 }  // namespace binary_reader

@@ -41,108 +41,13 @@ struct FileObject::Impl {
   std::unordered_map<std::string, size_t> field_name_map;
 };
 
-struct FileObject::const_iterator::IteratorState {
-  const FileObject* obj = nullptr;
-  size_t index = 0;
-  std::pair<std::string, Value> value;
-};
-
-FileObject::const_iterator::const_iterator(const_iterator&&) = default;
-FileObject::const_iterator& FileObject::const_iterator::operator=(
-    const_iterator&&) = default;
-FileObject::const_iterator::~const_iterator() = default;
-
-FileObject::const_iterator::const_iterator() : impl_(new IteratorState) {}
-
-FileObject::const_iterator::const_iterator(const const_iterator& other)
-    : impl_(new IteratorState) {
-  impl_->obj = other.impl_->obj;
-  impl_->index = other.impl_->index;
-  impl_->value = other.impl_->value;
-}
-
-FileObject::const_iterator& FileObject::const_iterator::operator=(
-    const const_iterator& other) {
-  const_iterator cp{other};
-  std::swap(impl_, cp.impl_);
-  return *this;
-}
-
-FileObject::const_iterator::reference FileObject::const_iterator::operator*()
-    const {
-  return impl_->value;
-}
-
-FileObject::const_iterator::pointer FileObject::const_iterator::operator->()
-    const {
-  return &**this;
-}
-
-FileObject::const_iterator& FileObject::const_iterator::operator++() {
-  if (impl_->index < impl_->obj->impl_->parsed_fields.size())
-    ++impl_->index;
-  FillValue();
-  return *this;
-}
-
-FileObject::const_iterator FileObject::const_iterator::operator++(int) {
-  const_iterator cp{*this};
-  ++*this;
-  return cp;
-}
-
-bool FileObject::const_iterator::operator==(const const_iterator& other) const {
-  return impl_ && other.impl_ && impl_->obj == other.impl_->obj &&
-         impl_->index == other.impl_->index;
-}
-
-bool FileObject::const_iterator::operator!=(const const_iterator& other) const {
-  return !(*this == other);
-}
-
-FileObject::const_iterator::const_iterator(std::unique_ptr<IteratorState> state)
-    : impl_(std::move(state)) {
-  FillValue();
-}
-
-void FileObject::const_iterator::FillValue() {
-  if (impl_->index >= impl_->obj->impl_->parsed_fields.size()) {
-    impl_->value = std::make_pair("", Value{});
-  } else {
-    ErrorCollection errors;
-    (void)impl_->obj->EnsureField(impl_->index, &errors);
-    impl_->value = std::make_pair(
-        impl_->obj->impl_->parsed_fields[impl_->index].name,
-        impl_->obj->impl_->parsed_fields[impl_->index].value.value_or(Value{}));
+std::vector<std::string> FileObject::GetFieldNames() const {
+  std::vector<std::string> ret;
+  ret.reserve(impl_->field_name_map.size());
+  for (auto& pair : impl_->field_name_map) {
+    ret.emplace_back(pair.first);
   }
-}
-
-
-FileObject::const_iterator FileObject::begin() const {
-  std::unique_ptr<const_iterator::IteratorState> state{
-      new const_iterator::IteratorState};
-  state->obj = this;
-  state->index = 0;
-  return const_iterator{std::move(state)};
-}
-
-FileObject::const_iterator FileObject::end() const {
-  std::unique_ptr<const_iterator::IteratorState> state{
-      new const_iterator::IteratorState};
-  state->obj = this;
-  state->index = impl_->parsed_fields.size();
-  return const_iterator{std::move(state)};
-}
-
-FileObject::const_iterator FileObject::find(const std::string& name) const {
-  std::unique_ptr<const_iterator::IteratorState> state{
-      new const_iterator::IteratorState};
-  state->obj = this;
-  if (impl_->field_name_map.count(name) > 0)
-    state->index = impl_->field_name_map[name];
-  else
-    state->index = impl_->parsed_fields.size();
-  return const_iterator{std::move(state)};
+  return ret;
 }
 
 bool FileObject::HasField(const std::string& name) const {

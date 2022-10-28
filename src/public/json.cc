@@ -50,15 +50,15 @@ void DumpJsonObject(std::ostream& os, const JsonOptions& opts,
                     std::shared_ptr<FileObject> obj, size_t indent) {
   bool first = true;
   os << "{";
-  for (auto& pair : *obj) {
+  for (auto& name : obj->GetFieldNames()) {
     if (!first)
       os << ",";
     if (opts.pretty)
       os << "\n" << std::string(indent + opts.indent, ' ');
-    os << '"' << pair.first << "\":";
+    os << '"' << name << "\":";
     if (opts.pretty)
       os << " ";
-    DumpJsonValue(os, opts, pair.second, indent + opts.indent);
+    DumpJsonValue(os, opts, obj->GetFieldValue(name), indent + opts.indent);
     first = false;
   }
   if (!first && opts.pretty)
