@@ -35,7 +35,7 @@ namespace binary_reader {
 ///   ...
 /// }
 /// </example>
-class TypeDefinition sealed
+class TypeDefinition final
     : public TypeInfoBase,
       public Statement,
       public std::enable_shared_from_this<TypeDefinition> {

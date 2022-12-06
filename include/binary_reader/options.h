@@ -62,7 +62,7 @@ inline std::ostream& operator<<(std::ostream& os, ByteOrder opt) {
 
 OptionType GetOptionType(const UtfString& type);
 
-class Options sealed {
+class Options final {
  public:
   enum class ParseResult {
     /// <summary>

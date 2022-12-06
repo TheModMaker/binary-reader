@@ -29,7 +29,7 @@ namespace binary_reader {
 /// <example>
 /// int32 foo;
 /// </example>
-class FieldInfo sealed : public Statement {
+class FieldInfo final : public Statement {
  public:
   FieldInfo(const DebugInfo& debug, const std::string& name,
             std::shared_ptr<TypeInfoBase> type,

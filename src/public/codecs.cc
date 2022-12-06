@@ -20,7 +20,7 @@ namespace binary_reader {
 
 namespace {
 
-class Utf8Converter sealed : public TextConverter {
+class Utf8Converter final : public TextConverter {
  public:
   Status Decode(const uint8_t* buffer, size_t size, std::u16string* output,
                 ErrorInfo* error) {
@@ -131,7 +131,7 @@ class Utf8Converter sealed : public TextConverter {
 };
 
 template <typename T>
-class DefaultCodec sealed : public Codec {
+class DefaultCodec final : public Codec {
  public:
   std::shared_ptr<TextConverter> CreateCoder() override {
     return std::make_shared<T>();

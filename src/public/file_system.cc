@@ -33,7 +33,7 @@ namespace {
 
 constexpr const size_t kReadSize = 16 * 1024 * 1024;
 
-class FileFileReader sealed : public FileReader {
+class FileFileReader final : public FileReader {
  public:
   FileFileReader(const std::string& path, std::FILE* fs)
       : path_(path), fs_(fs), size_(GetSize(fs)) {}
@@ -85,7 +85,7 @@ class FileFileReader sealed : public FileReader {
   const uint64_t size_;
 };
 
-class FStreamFileSystem sealed : public FileSystem {
+class FStreamFileSystem final : public FileSystem {
  public:
   FStreamFileSystem() {}
 

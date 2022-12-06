@@ -29,7 +29,7 @@ namespace binary_reader {
 /// buffers.  This will keep larger buffers and maintain the exisitng
 /// buffers.
 /// </summary>
-class BufferedFileReader sealed {
+class BufferedFileReader final {
   NON_COPYABLE_OR_MOVABLE_TYPE(BufferedFileReader);
 
  public:

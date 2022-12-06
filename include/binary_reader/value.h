@@ -42,7 +42,7 @@ std::ostream& operator<<(std::ostream& os, ValueType value);
 /// accessing the value, the stored type must match the requested format; this
 /// will not convert values.
 /// </summary>
-class Value sealed {
+class Value final {
  public:
   Value();
   template <typename T, typename = std::enable_if_t<

@@ -24,7 +24,7 @@ namespace binary_reader {
 /// the object on copy.  This always uses new/delete.
 /// </summary>
 template <typename T>
-class cloneable_unique_ptr sealed {
+class cloneable_unique_ptr final {
  public:
   cloneable_unique_ptr() : ptr_(nullptr) {}
   explicit cloneable_unique_ptr(T* value) : ptr_(value) {}

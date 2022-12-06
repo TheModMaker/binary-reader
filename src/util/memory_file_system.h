@@ -23,7 +23,7 @@
 
 namespace binary_reader {
 
-class MemoryFileReader sealed : public FileReader {
+class MemoryFileReader final : public FileReader {
  public:
   MemoryFileReader(std::initializer_list<uint8_t> buffer);
   MemoryFileReader(const std::string& buffer);
@@ -43,7 +43,7 @@ class MemoryFileReader sealed : public FileReader {
   size_t pos_;
 };
 
-class MemoryFileSystem sealed : public FileSystem {
+class MemoryFileSystem final : public FileSystem {
  public:
   std::shared_ptr<FileReader> Open(const std::string& path) override;
 

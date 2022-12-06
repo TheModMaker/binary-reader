@@ -39,7 +39,7 @@ struct FileObjectInit;
 /// requesting the field's value.  The cached values can be cleared to reduce
 /// memory usage.
 /// </summary>
-class FileObject sealed {
+class FileObject final {
  public:
   FileObject(const FileObject&) = delete;
   FileObject(FileObject&&) = delete;

@@ -31,7 +31,7 @@ namespace binary_reader {
 
 namespace {
 
-struct Stack sealed {
+struct Stack final {
   NON_COPYABLE_OR_MOVABLE_TYPE(Stack);
 
   Stack() : default_types_(TypeInfoBase::GetBuiltInTypes()) {}
@@ -63,7 +63,7 @@ struct Stack sealed {
   std::vector<std::shared_ptr<Statement>> statements_;
 };
 
-class Visitor : public antlr4::AntlrBinaryVisitor {
+class Visitor final : public antlr4::AntlrBinaryVisitor {
  public:
   Visitor(const std::string& path,
           std::vector<std::shared_ptr<TypeDefinition>>* defs,
@@ -228,7 +228,7 @@ class Visitor : public antlr4::AntlrBinaryVisitor {
   ErrorCollection* const errors_;
 };
 
-class ErrorHandler sealed : public antlr4::ANTLRErrorListener {
+class ErrorHandler final : public antlr4::ANTLRErrorListener {
  public:
   ErrorHandler(const std::string& file, ErrorCollection* errors)
       : file_(file), errors_(errors) {}

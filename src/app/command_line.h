@@ -22,7 +22,7 @@
 
 namespace binary_reader {
 
-class CommandLine sealed {
+class CommandLine final {
  public:
   bool Parse(const char** argv, int argc);
 

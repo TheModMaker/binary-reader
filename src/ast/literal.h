@@ -20,7 +20,7 @@
 
 namespace binary_reader {
 
-class Literal sealed : public Expression {
+class Literal final : public Expression {
  public:
   Literal(const DebugInfo& debug, Value value);
 

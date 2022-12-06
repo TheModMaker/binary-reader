@@ -27,7 +27,7 @@ namespace binary_reader {
 /// compared by value, the signedness is handled like you'd expect of normal
 /// numbers.
 /// </summary>
-class Number sealed {
+class Number final {
  public:
   Number() : Number(0) {}
   template <typename T, typename = std::enable_if_t<std::is_arithmetic_v<T>>>

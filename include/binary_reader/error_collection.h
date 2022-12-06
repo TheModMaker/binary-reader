@@ -24,7 +24,7 @@ namespace binary_reader {
 /// <summary>
 /// Holds a collection of error objects.
 /// </summary>
-class ErrorCollection sealed {
+class ErrorCollection final {
  public:
   ErrorCollection();
   ErrorCollection(const ErrorCollection&) = delete;

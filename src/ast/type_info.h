@@ -109,7 +109,7 @@ class TypeInfoBase {
 /// <summary>
 /// Defines a type info about a built-in integer type.
 /// </summary>
-class IntegerTypeInfo sealed : public TypeInfoBase {
+class IntegerTypeInfo final : public TypeInfoBase {
  public:
   IntegerTypeInfo(const DebugInfo& debug, const std::string& alias_name,
                   Size size, Signedness sign, ByteOrder order);

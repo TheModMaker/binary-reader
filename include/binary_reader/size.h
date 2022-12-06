@@ -25,7 +25,7 @@ namespace binary_reader {
 /// just uses the bit count and converts to other sizes.  Using this
 /// type ensures we always use the correct values and makes it all explicit.
 /// </summary>
-class Size sealed {
+class Size final {
  public:
   Size() : pos_(0) {}
 

@@ -27,7 +27,7 @@ namespace binary_reader {
 /// <summary>
 /// Holds a collection of opton values set in a definition file.
 /// </summary>
-class OptionSet sealed {
+class OptionSet final {
  public:
   bool AddStatic(DebugInfo debug, OptionType type, const UtfString& value,
                  ErrorCollection* errors);

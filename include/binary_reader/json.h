@@ -24,7 +24,7 @@
 
 namespace binary_reader {
 
-class JsonOptions {
+class JsonOptions final {
  public:
   JsonOptions();
   ~JsonOptions();

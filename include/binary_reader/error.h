@@ -53,7 +53,7 @@ enum class ErrorKind : uint16_t {
   FieldsMustBeStatic = 12000,
 };
 
-struct DebugInfo sealed {
+struct DebugInfo final {
   /// <summary>
   /// The file path to the file this info refers to.
   /// </summary>
@@ -69,7 +69,7 @@ struct DebugInfo sealed {
   size_t column = 0;
 };
 
-struct ErrorInfo sealed {
+struct ErrorInfo final {
   ErrorInfo();
   ErrorInfo(DebugInfo debug, ErrorKind kind,
             ErrorLevel level = ErrorLevel::Error, uint64_t offset = 0);

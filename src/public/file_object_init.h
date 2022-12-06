@@ -28,7 +28,7 @@
 
 namespace binary_reader {
 
-struct FileObjectInit sealed {
+struct FileObjectInit final {
   // Normal mode
   std::shared_ptr<BufferedFileReader> file;
   std::shared_ptr<const TypeDefinition> type;
@@ -38,7 +38,7 @@ struct FileObjectInit sealed {
   std::vector<std::pair<std::string, Value>> test_fields;
 };
 
-struct FileObjectDeleter sealed {
+struct FileObjectDeleter final {
   void operator()(FileObject* o) {
     delete o;
   }

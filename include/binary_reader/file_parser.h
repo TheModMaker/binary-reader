@@ -29,7 +29,7 @@ namespace binary_reader {
 /// Options to control how the file parsing is handled. These cannot be changed
 /// once the FileParser is created.
 /// </summary>
-class FileParserOptions sealed {
+class FileParserOptions final {
  public:
   FileParserOptions();
   ~FileParserOptions();
@@ -56,7 +56,7 @@ class FileParserOptions sealed {
 /// This can be used to parse binary files.  This uses a binary definition file
 /// to describe the format and uses that to read the file.
 /// </summary>
-class FileParser sealed {
+class FileParser final {
  public:
   FileParser(const FileParser&) = delete;
   FileParser(FileParser&&) = delete;
