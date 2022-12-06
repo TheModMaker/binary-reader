@@ -42,7 +42,7 @@ bool BufferedFileReader::Seek(Size position, ErrorCollection* errors) {
   start_position_ = position.ClipToByte();
   buffer_offset_ = Size::FromBits(position.bit_offset());
   used_ = 0;
-  size_t byte_pos = position.byte_count();
+  uint64_t byte_pos = position.byte_count();
   if (!reader_->Seek(&byte_pos, errors))
     return false;
   return true;

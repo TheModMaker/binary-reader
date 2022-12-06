@@ -93,7 +93,8 @@ bool FileObject::ReparseObject(ErrorCollection* errors) {
   Size offset = impl_->init.start_position;
   for (auto stmt : impl_->init.type->statements()) {
     if (auto field = std::dynamic_pointer_cast<FieldInfo>(stmt)) {
-      impl_->parsed_fields.push_back({field->name(), field->type(), offset});
+      impl_->parsed_fields.push_back(
+          {field->name(), field->type(), offset, {}});
       impl_->field_name_map[field->name()] = impl_->parsed_fields.size() - 1;
 
       if (!field->type()->static_size().has_value()) {

@@ -133,7 +133,7 @@ class Options final {
   /// </param>
   /// <returns>The option's value, or the given default.</returns>
   template <typename T>
-  T GetOption(T default_ = default(T)) {
+  T GetOption(T default_ = T{}) {
     if constexpr (std::is_same<T, Signedness>::value) {
       if (signedness == Signedness::Unset)
         return default_;

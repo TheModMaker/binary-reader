@@ -222,7 +222,7 @@ TEST_F(FileSystemTest, Default_ReadEof) {
   ASSERT_TRUE(system);
   auto reader = system->Open("file.def");
   ASSERT_TRUE(reader);
-  size_t seek = 1;
+  uint64_t seek = 1;
   ErrorCollection errors;
   ASSERT_TRUE(reader->Seek(&seek, &errors));
 
@@ -247,7 +247,7 @@ TEST_F(FileSystemTest, Default_Seek) {
   ASSERT_TRUE(reader);
   ASSERT_EQ(reader->position(), 0u);
 
-  size_t seek = 5;
+  uint64_t seek = 5;
   ErrorCollection errors;
   ASSERT_TRUE(reader->Seek(&seek, &errors));
   ASSERT_EQ(seek, 5);

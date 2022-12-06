@@ -87,12 +87,20 @@ template <>
 struct FormatHelper<0> {
   template <typename Iter, typename... Args>
   static std::string Format(const char* format, Iter, Iter, Args... args) {
+#ifdef __GNUC__
+#  pragma GCC diagnostic push
+#  pragma GCC diagnostic ignored "-Wformat-security"
+#  define sprintf_s snprintf
+#endif
     const int size = snprintf(nullptr, 0, format, args...);
     if (size <= 0)
       return {};
     std::string ret(size, '\0');
     sprintf_s(ret.data(), ret.size() + 1, format, args...);
     return ret;
+#ifdef __GNUC__
+#  pragma GCC diagnostic pop
+#endif
   }
 };
 
@@ -137,16 +145,16 @@ ErrorInfo::ErrorInfo(DebugInfo debug, ErrorKind kind,
                      std::initializer_list<std::string_view> message_args,
                      ErrorLevel level, uint64_t offset)
     : debug(debug),
-      kind(kind),
       message(DefaultErrorMessage(kind, std::move(message_args))),
+      kind(kind),
       level(level),
       offset(offset) {}
 
 ErrorInfo::ErrorInfo(DebugInfo debug, ErrorKind kind, std::string_view message,
                      ErrorLevel level, uint64_t offset)
     : debug(debug),
-      kind(kind),
       message(message),
+      kind(kind),
       level(level),
       offset(offset) {}
 

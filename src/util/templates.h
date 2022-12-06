@@ -15,6 +15,7 @@
 #ifndef BINARY_READER_UTIL_TEMPLATES_H_
 #define BINARY_READER_UTIL_TEMPLATES_H_
 
+#include <cmath>
 #include <cstdint>
 #include <limits>
 
@@ -26,12 +27,12 @@ Dest clamp_cast(Source src) {
     constexpr const Dest kMinDest = std::numeric_limits<Dest>::lowest();
     constexpr const Dest kMaxDest = std::numeric_limits<Dest>::max();
     if (src > 0 &&
-        (!isfinite(static_cast<double>(src)) ||
+        (!std::isfinite(static_cast<double>(src)) ||
          static_cast<uintmax_t>(src) > static_cast<uintmax_t>(kMaxDest))) {
       return kMaxDest;
     }
     if (src < 0 &&
-        (!isfinite(static_cast<double>(src)) ||
+        (!std::isfinite(static_cast<double>(src)) ||
          static_cast<intmax_t>(src) < static_cast<intmax_t>(kMinDest))) {
       return kMinDest;
     }

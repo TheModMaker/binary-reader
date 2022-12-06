@@ -27,7 +27,6 @@ bool ParseSuccess(const char* val,
   ErrorCollection errors;
   ParseDefinitionFile("", val, defs, &errors);
   for (const auto& error : errors) {
-    const char* levels[] = {"Error", "Warning", "Info"};
     std::cerr << error << "\n";
   }
   return errors.empty();
@@ -51,11 +50,6 @@ std::shared_ptr<FieldInfo> as_field(std::shared_ptr<Statement> statement) {
 
 std::shared_ptr<Literal> as_literal(std::shared_ptr<Expression> exp) {
   return std::dynamic_pointer_cast<Literal>(exp);
-}
-
-std::shared_ptr<TypeDefinition> as_type_def(
-    std::shared_ptr<Statement> statement) {
-  return std::dynamic_pointer_cast<TypeDefinition>(statement);
 }
 
 #define CHECK_ERROR2(error, li, c, le)   \

@@ -23,8 +23,6 @@ namespace binary_reader {
 
 namespace {
 
-constexpr const uint8_t kNoBitOffset = 0;
-
 std::shared_ptr<BufferedFileReader> MakeReader(
     std::initializer_list<uint8_t> buffer, uint64_t bits = 0,
     bool eof = false) {

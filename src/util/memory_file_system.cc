@@ -50,7 +50,7 @@ bool MemoryFileReader::Read(uint8_t* buffer, size_t* size, ErrorCollection*) {
 }
 
 bool MemoryFileReader::Seek(uint64_t* position, ErrorCollection*) {
-  pos_ = *position = std::min(buffer_.size(), *position);
+  pos_ = *position = std::min<uint64_t>(buffer_.size(), *position);
   return true;
 }
 

@@ -21,6 +21,8 @@ add_library(parser STATIC
 if(MSVC)
   # Suppress unused parameter warning in generated code
   target_compile_options(parser PRIVATE "/wd4100")
+else()
+  target_compile_options(parser PRIVATE "-Wno-unused-parameter")
 endif()
 target_include_directories(parser PUBLIC ${ANTLR_antlr_parser_OUTPUT_DIR})
 target_link_libraries(parser antlr4_static)

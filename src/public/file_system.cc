@@ -47,7 +47,7 @@ class FileFileReader final : public FileReader {
     return ftello(fs_);
   }
 
-  std::optional<uint64_t> size() const {
+  std::optional<uint64_t> size() const override {
     return size_;
   }
 

@@ -67,7 +67,7 @@ std::unordered_set<OptionType> TypeDefinition::GetOptionTypes() const {
 }
 
 std::shared_ptr<TypeInfoBase> TypeDefinition::Instantiate(
-    const DebugInfo& debug, Options options) const  {
+    const DebugInfo& debug, Options) const  {
   return std::make_shared<TypeDefinition>(debug, alias_name(), statements_);
 }
 
