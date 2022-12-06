@@ -64,6 +64,8 @@ void DumpJsonObject(std::ostream& os, const JsonOptions& opts,
   if (!first && opts.pretty)
     os << "\n" << std::string(indent, ' ');
   os << "}";
+  if (opts.pretty && indent == 0)
+    os << "\n";
 }
 
 }  // namespace binary_reader

@@ -50,7 +50,7 @@ TEST(JsonTest, NoFields) {
     JsonOptions opts;
     opts.pretty = true;
     DumpJsonObject(ss, opts, obj);
-    EXPECT_EQ(ss.str(), "{}");
+    EXPECT_EQ(ss.str(), "{}\n");
   }
 }
 
@@ -90,7 +90,7 @@ TEST(JsonTest, NoFieldsNested) {
     JsonOptions opts;
     opts.pretty = true;
     DumpJsonObject(ss, opts, obj);
-    EXPECT_EQ(ss.str(), "{\n  \"a\": {}\n}");
+    EXPECT_EQ(ss.str(), "{\n  \"a\": {}\n}\n");
   }
 }
 
@@ -158,7 +158,8 @@ TEST(JsonTest, DeepNested) {
     }
   },
   "d": 5
-})");
+}
+)");
   }
 }
 
